@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isCompanyOwner } = useAuth(); // Destructure isCompanyOwner
 
   return (
     <nav className="bg-gray-800 p-4 text-white">
@@ -13,13 +13,17 @@ export default function Navbar() {
           <Link to="/" className="hover:text-gray-300">Home</Link>
           <Link to="/companies" className="hover:text-gray-300">Companies</Link>
           
-          {/* Show Services Management link only if isAdmin is true */}
+          {/* Admin Links */}
           {isAdmin && (
-            <Link to="/admin/services" className="hover:text-gray-300">Manage Services</Link>
+            <>
+              <Link to="/admin/services" className="hover:text-gray-300">Manage Services</Link>
+              <Link to="/admin/regions" className="hover:text-gray-300">Manage Regions</Link>
+            </>
           )}
-          {/* Show Regions Management link only if isAdmin is true */}
-          {isAdmin && ( // <--- NEW CONDITIONAL LINK
-            <Link to="/admin/regions" className="hover:text-gray-300">Manage Regions</Link>
+
+          {/* Company Owner Link */}
+          {user && user.role === 'company_owner' && ( // <--- NEW: Link for company owners
+            <Link to="/my-company-dashboard" className="hover:text-gray-300">My Company</Link>
           )}
 
           {user ? (
@@ -30,7 +34,7 @@ export default function Navbar() {
           ) : (
             <>
               <Link to="/login" className="hover:text-gray-300">Login</Link>
-              <Link to="/register" className="hover:text-gray-300">Register</Link>
+              <Link to="/register-company" className="hover:text-gray-300">Register Company</Link> {/* <--- CHANGED: Link to new registration page */}
             </>
           )}
         </div>

@@ -1,81 +1,207 @@
+# backend/app/routes/auth.py
 from flask import Blueprint, request, jsonify
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from ..models import User, db # Ensure User and db are imported
+from sqlalchemy.exc import IntegrityError
+import logging
+import traceback
+
+from ..models import User, Company, Region, Service, db
+
+logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
+    """
+    Registers a new standard user.
+    """
     data = request.get_json()
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
 
-    if not all([username, email, password]):
+    if not username or not email or not password:
         return jsonify({'error': 'Username, email, and password are required'}), 400
 
-    # Check for existing user by either username or email
-    if User.query.filter((User.email == email) | (User.username == username)).first():
-        return jsonify({'error': 'User with this email or username already exists'}), 409
+    if User.query.filter_by(username=username).first():
+        return jsonify({'error': 'Username already exists'}), 409
+    if User.query.filter_by(email=email).first():
+        return jsonify({'error': 'Email already exists'}), 409
 
-    user = User(username=username, email=email)
-    user.set_password(password) # Hash the password
+    try:
+        new_user = User(username=username, email=email, role='user') # Default role 'user'
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
 
-    db.session.add(user)
-    db.session.commit()
-    return jsonify({'message': 'User registered successfully'}), 201
+        access_token = create_access_token(identity=str(new_user.id)) # <--- CHANGED: Convert to string
+        logger.info(f"User '{new_user.username}' registered successfully.")
+        return jsonify({
+            'message': 'User registered successfully',
+            'access_token': access_token,
+            'user': {
+                'id': new_user.id,
+                'username': new_user.username,
+                'email': new_user.email,
+                'role': new_user.role
+            }
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        logger.exception("Error during user registration:")
+        return jsonify({'error': 'Internal server error during registration'}), 500
 
-@auth_bp.route('/login', methods=['POST'])
-def login():
+@auth_bp.route('/register-company', methods=['POST'])
+def register_company():
+    """
+    Registers a new company and its associated company_owner user.
+    """
     data = request.get_json()
+    
+    # User credentials
+    username = data.get('username')
+    password = data.get('password')
+    user_email = data.get('user_email') # Email for the user account
 
-    # Get username and password from the request body
-    username_from_request = data.get('username')
-    password_from_request = data.get('password')
+    # Company details
+    company_name = data.get('name')
+    company_email = data.get('email') # Email for the company
+    company_phone = data.get('phone')
+    company_description = data.get('description')
+    company_region_id = data.get('region_id')
+    company_service_ids = data.get('services', [])
 
-    # Basic input validation
-    if not username_from_request or not password_from_request:
-        return jsonify({"msg": "Missing username or password"}), 400
+    # Basic validation
+    if not (username and password and user_email and company_name and company_email and company_phone):
+        return jsonify({'error': 'All required fields (user credentials and company details) must be provided'}), 400
 
-    # Query the user by username
-    user = User.query.filter_by(username=username_from_request).first()
+    # Check for existing username/email for the user account
+    if User.query.filter_by(username=username).first():
+        return jsonify({'error': 'Username already exists'}), 409
+    if User.query.filter_by(email=user_email).first():
+        return jsonify({'error': 'User email already exists'}), 409
+    
+    # Check for existing company name/email
+    if Company.query.filter_by(name=company_name).first():
+        return jsonify({'error': 'Company name already exists'}), 409
+    if Company.query.filter_by(email=company_email).first():
+        return jsonify({'error': 'Company email already exists'}), 409
 
-    # Check if user exists and password is correct
-    if user is None or not user.check_password(password_from_request):
-        return jsonify({'msg': 'Invalid username or password'}), 401 # Generic message for security
+    try:
+        # 1. Create the User record for the company owner
+        new_user = User(username=username, email=user_email, role='company_owner')
+        new_user.set_password(password)
+        db.session.add(new_user)
+        # We don't flush here yet, as new_company.id is not available
 
-    # --- CRITICAL FIX: Ensure 'identity' is a string ---
-    # `user.id` is typically an integer. Flask-JWT-Extended requires the identity
-    # to be a string when embedded in the token's 'sub' (subject) claim.
-    access_token = create_access_token(identity=str(user.id)) # Explicitly cast user.id to a string
+        # 2. Create the Company record
+        region = None
+        if company_region_id:
+            region = Region.query.get(company_region_id)
+            if not region:
+                return jsonify({'error': 'Invalid region ID provided'}), 400
 
-    # Return the token and user details
-    return jsonify({
-        'access_token': access_token,
-        'user': {
+        valid_service_ids = [int(s_id) for s_id in company_service_ids if s_id is not None]
+        services = Service.query.filter(Service.id.in_(valid_service_ids)).all() if valid_service_ids else []
+
+        new_company = Company(
+            name=company_name,
+            email=company_email,
+            phone=company_phone,
+            description=company_description,
+            status='pending', # Companies usually start as pending review
+            region=region,
+            user=new_user # Link to the user who created it (the company_owner)
+        )
+        new_company.services = services # Associate services
+        db.session.add(new_company)
+        
+        # 3. Flush the session to get IDs for new_user and new_company
+        db.session.flush() 
+
+        # 4. Now that new_company has an ID, link new_user.company_id to new_company.id directly.
+        new_user.company_id = new_company.id
+
+        db.session.commit() # Commit the entire transaction
+
+        access_token = create_access_token(identity=str(new_user.id)) # <--- CHANGED: Convert to string
+        logger.info(f"Company '{new_company.name}' and owner '{new_user.username}' registered successfully.")
+        return jsonify({
+            'message': 'Company and owner registered successfully',
+            'access_token': access_token,
+            'user': {
+                'id': new_user.id,
+                'username': new_user.username,
+                'email': new_user.email,
+                'role': new_user.role,
+                'company_id': new_company.id
+            }
+        }), 201
+    except IntegrityError as e:
+        db.session.rollback()
+        logger.exception("IntegrityError during company registration:")
+        return jsonify({'error': 'Registration failed due to existing data (e.g., company name/email, user username/email already exists).'}), 409
+    except Exception as e:
+        db.session.rollback()
+        logger.exception("Error during company registration:")
+        return jsonify({'error': 'Internal server error during company registration'}), 500
+
+
+@auth_bp.route('/token', methods=['POST'])
+def login():
+    """
+    Authenticates a user and returns JWT access token.
+    """
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+
+    user = User.query.filter_by(username=username).first()
+
+    if user and user.check_password(password):
+        access_token = create_access_token(identity=str(user.id)) # <--- CHANGED: Convert to string
+        logger.info(f"User '{user.username}' logged in successfully.")
+        
+        user_data = {
             'id': user.id,
             'username': user.username,
             'email': user.email,
             'role': user.role
         }
-    }), 200
+        # If the user is a company owner, include their company_id
+        if user.role == 'company_owner' and user.company_profile:
+            user_data['company_id'] = user.company_profile.id
+            logger.info(f"Company owner '{user.username}' logged in for company ID: {user.company_profile.id}")
+
+        return jsonify({
+            'access_token': access_token,
+            'user': user_data
+        }), 200
+    else:
+        logger.warning(f"Failed login attempt for username: {username}")
+        return jsonify({'msg': 'Bad username or password'}), 401
+
 
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def me():
-    # get_jwt_identity() retrieves the 'identity' that was set during token creation (user.id as a string)
-    user_id = get_jwt_identity() # This will be the string version of user.id
-
-    # Convert back to integer if your User.query.get expects an integer
-    user = User.query.get(int(user_id)) # Cast back to int if User.query.get expects int
+    """
+    Returns current user's details.
+    """
+    user_id = get_jwt_identity() # This will already be a string as it's extracted from the token
+    user = User.query.get(int(user_id))
 
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    return jsonify({
+    user_data = {
         'id': user.id,
         'username': user.username,
         'email': user.email,
-        'role': user.role # Include role if you want it on the frontend
-    })
+        'role': user.role
+    }
+    # If the user is a company owner, include their company_id
+    if user.role == 'company_owner' and user.company_profile:
+        user_data['company_id'] = user.company_profile.id
+
+    return jsonify(user_data)

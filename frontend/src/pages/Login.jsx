@@ -3,8 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 
 export default function Login() {
-  // Destructure user and login from useAuth.
-  // The 'user' object from AuthContext will now contain the 'role'.
   const { user, login } = useAuth();
   const navigate = useNavigate();
 
@@ -13,14 +11,15 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   // If a user is already logged in, redirect them based on their role
-  // This handles cases where they try to manually go to /login while already authenticated
   if (user) {
     if (user.role === 'admin') {
-      return <Navigate to="/admin-dashboard" replace />; // Redirect admins to admin dashboard
-    } else if (user.role === 'collector') { // Assuming 'collector' is a specific role
-      return <Navigate to="/collector-dashboard" replace />; // Redirect collectors to their dashboard
+      return <Navigate to="/admin-dashboard" replace />;
+    } else if (user.role === 'collector') {
+      return <Navigate to="/collector-dashboard" replace />;
+    } else if (user.role === 'company_owner') { // <--- NEW: Redirect company_owner
+      return <Navigate to="/my-company-dashboard" replace />;
     } else {
-      return <Navigate to="/user-dashboard" replace />; // Default for other users
+      return <Navigate to="/" replace />; // Default for other users
     }
   }
 
@@ -42,16 +41,18 @@ export default function Login() {
     }
 
     try {
-      const result = await login(username, password); // This returns { success: true, user: loggedInUser }
+      const result = await login(username, password);
 
       if (result && result.success && result.user) {
         // After successful login, check the role from the returned user object
         if (result.user.role === 'admin') {
-          navigate('/admin-dashboard'); // Redirect admins
+          navigate('/admin-dashboard');
         } else if (result.user.role === 'collector') {
-          navigate('/collector-dashboard'); // Redirect collectors
+          navigate('/collector-dashboard');
+        } else if (result.user.role === 'company_owner') { // <--- NEW: Redirect company_owner
+          navigate('/my-company-dashboard');
         } else {
-          navigate('/user-dashboard'); // Default for other users
+          navigate('/');
         }
       } else {
         setError(result && result.message ? result.message : 'Login failed. Please check your credentials.');

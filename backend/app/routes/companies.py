@@ -1,6 +1,6 @@
 # backend/app/routes/companies.py
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity # <--- Ensure these are imported
 from sqlalchemy.exc import IntegrityError
 import traceback
 import logging
@@ -10,7 +10,7 @@ from ..models import Company, Region, Service, User, db
 
 logger = logging.getLogger(__name__)
 
-# Custom decorator for role-based access control
+# Custom decorator for role-based access control (copied for self-containment)
 def role_required(allowed_roles):
     """
     Decorator to restrict access to a route based on user roles.
@@ -18,9 +18,17 @@ def role_required(allowed_roles):
     """
     def decorator(fn):
         @wraps(fn)
-        @jwt_required() # Ensure JWT is required first
+        @jwt_required()
         def wrapper(*args, **kwargs):
             current_user_id_str = get_jwt_identity()
+            
+            # --- DEBUGGING LOGS START ---
+            logger.debug(f"role_required: JWT Identity extracted: {current_user_id_str}")
+            if current_user_id_str is None:
+                logger.error("role_required: JWT Identity is None. Token might be missing or invalid.")
+                return jsonify({'msg': 'Authorization token missing or invalid'}), 401
+            # --- DEBUGGING LOGS END ---
+
             try:
                 current_user_id = int(current_user_id_str)
             except (ValueError, TypeError):
@@ -32,13 +40,14 @@ def role_required(allowed_roles):
                 logger.error(f"User ID {current_user_id} from token not found in DB.")
                 return jsonify({'msg': 'User not found'}), 404
 
-            # Logging for debugging (keep for now, remove later)
             logger.info(f"Role Check: User '{user.username}' (ID: {user.id}) has role: '{user.role}'. Allowed roles: {allowed_roles}")
 
             if user.role not in allowed_roles:
                 logger.warning(f"Access Denied: User '{user.username}' (role: {user.role}) attempted to access restricted resource. Allowed roles: {allowed_roles}")
                 return jsonify({'msg': 'Access Denied: Insufficient permissions'}), 403 # Forbidden
             
+            # Pass the user object to the decorated function for further checks
+            kwargs['current_user'] = user 
             return fn(*args, **kwargs)
         return wrapper
     return decorator
@@ -76,21 +85,27 @@ def get_company(company_id):
     company = Company.query.get_or_404(company_id)
     return jsonify(serialize_company(company))
 
-# Create a new company (protected by role)
+# NEW: Endpoint for a company owner to get their own company details
+@companies_bp.route('/my-company', methods=['GET'])
+@role_required(['company_owner'])
+def get_my_company(current_user):
+    """
+    Allows a company_owner to retrieve their own company details.
+    """
+    # --- DEBUGGING LOGS START ---
+    logger.debug(f"get_my_company: current_user received: {current_user.username} (ID: {current_user.id})")
+    if not current_user.company_profile:
+        logger.warning(f"get_my_company: User '{current_user.username}' has no associated company_profile.")
+        return jsonify({'error': 'No company profile found for this user'}), 404
+    # --- DEBUGGING LOGS END ---
+    return jsonify(serialize_company(current_user.company_profile))
+
+
+# Create a new company (Admin only)
 @companies_bp.route('/', methods=['POST'])
 @role_required(['admin']) # <--- CHANGED: Only admin can create companies
-def create_company():
-    current_user_id_str = get_jwt_identity()
-    try:
-        current_user_id = int(current_user_id_str)
-    except (ValueError, TypeError):
-        logger.error(f"Invalid user ID in token: {current_user_id_str}")
-        return jsonify({'error': 'Invalid user identity in token'}), 401
-
-    user = User.query.get(current_user_id)
-    if not user:
-        logger.error(f"Authenticated user ID {current_user_id} not found in database.")
-        return jsonify({'error': 'Authenticated user not found'}), 404
+def create_company(current_user): # current_user is passed by role_required
+    current_user_id = current_user.id # Use current_user object directly
 
     data = request.get_json()
     logger.info(f"\n--- Create Company Request ---")
@@ -126,7 +141,7 @@ def create_company():
             description=description,
             status=status,
             region=region,
-            user=user
+            user=current_user # Assign the current authenticated user as the company creator
         )
         new_company.services = services
 
@@ -144,24 +159,23 @@ def create_company():
         return jsonify({'error': f'Internal server error during creation: {str(e)}'}), 500
 
 
-# Update a company (protected by role)
+# Update a company (protected by role and ownership)
 @companies_bp.route('/<int:company_id>', methods=['PUT'])
-@role_required(['admin']) # <--- CHANGED: Only admin can update companies
-def update_company(company_id):
-    current_user_id_str = get_jwt_identity()
-    try:
-        current_user_id = int(current_user_id_str)
-    except (ValueError, TypeError):
-        logger.error(f"Invalid user ID in token for update request: {current_user_id_str}")
-        return jsonify({'error': 'Invalid user identity in token'}), 401
-
+@role_required(['admin', 'company_owner']) # <--- CHANGED: Admin or company_owner can update
+def update_company(company_id, current_user): # current_user is passed by role_required
     logger.info(f"\n--- Update Company Request ---")
-    logger.info(f"Update request for company ID: {company_id} by user ID: {current_user_id}")
+    logger.info(f"Update request for company ID: {company_id} by user '{current_user.username}' (ID: {current_user.id}, Role: {current_user.role})")
 
     company = Company.query.get(company_id)
     if not company:
         logger.warning(f"Company ID {company_id} not found for update.")
         return jsonify({'error': 'Company not found'}), 404
+
+    # CRITICAL: Ownership check for company_owner role
+    if current_user.role == 'company_owner':
+        if not current_user.company_profile or current_user.company_profile.id != company_id:
+            logger.warning(f"Access Denied: Company owner '{current_user.username}' attempted to update company ID {company_id}, which they do not own.")
+            return jsonify({'msg': 'Access Denied: You can only update your own company'}), 403
 
     data = request.get_json()
     logger.info(f"Received update data: {data}")
@@ -204,16 +218,9 @@ def update_company(company_id):
 # Delete a company (protected by role)
 @companies_bp.route('/<int:company_id>', methods=['DELETE'])
 @role_required(['admin']) # Only admin can delete companies (already correct)
-def delete_company(company_id):
-    current_user_id_str = get_jwt_identity()
-    try:
-        current_user_id = int(current_user_id_str)
-    except (ValueError, TypeError):
-        logger.error(f"Invalid user ID in token for delete request: {current_user_id_str}")
-        return jsonify({'error': 'Invalid user identity in token'}), 401
-
+def delete_company(company_id, current_user): # current_user is passed by role_required
     logger.info(f"\n--- Delete Company Request ---")
-    logger.info(f"Delete request for company ID: {company_id} by user ID: {current_user_id}")
+    logger.info(f"Delete request for company ID: {company_id} by user '{current_user.username}' (ID: {current_user.id}, Role: {current_user.role})")
 
     try:
         company = Company.query.get(company_id)

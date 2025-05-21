@@ -5,16 +5,17 @@ import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import Register from './pages/Register';
+import RegisterCompany from './pages/RegisterCompany'; // <--- CHANGED: Import RegisterCompany
+import MyCompanyDashboard from './pages/MyCompanyDashboard'; // <--- NEW IMPORT
 import Companies from './pages/Companies';
 import CompanyDetails from './pages/CompanyDetails';
 import CreateCompany from './pages/CreateCompany';
 import EditCompany from './pages/EditCompany';
 import ServicesManagement from './pages/ServicesManagement';
-import RegionsManagement from './pages/RegionsManagement'; // <--- NEW IMPORT
+import RegionsManagement from './pages/RegionsManagement';
 import './index.css';
 
-// Placeholder components for new dashboards
+// Placeholder components for other dashboards (if not already fully implemented)
 const AdminDashboard = () => <h2 className="text-3xl text-center mt-20">Admin Dashboard</h2>;
 const CollectorDashboard = () => <h2 className="text-3xl text-center mt-20">Collector Dashboard</h2>;
 const UserDashboard = () => <h2 className="text-3xl text-center mt-20">User Dashboard</h2>;
@@ -31,7 +32,9 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/register-company" element={<RegisterCompany />} /> {/* <--- CHANGED: New path for company registration */}
+              {/* The old /register route is now gone */}
+
               <Route path="/companies" element={<Companies />} />
               <Route path="/companies/:id" element={<CompanyDetails />} />
 
@@ -60,8 +63,16 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/my-company-dashboard" // <--- NEW PROTECTED ROUTE FOR COMPANY OWNER
+                element={
+                  <ProtectedRoute allowedRoles={['company_owner']}>
+                    <MyCompanyDashboard />
+                  </ProtectedRoute>
+                }
+              />
 
-              {/* Company Management Routes (Protected) */}
+              {/* Company Management Routes (Protected for Admin) */}
               <Route
                 path="/companies/new"
                 element={
@@ -91,7 +102,7 @@ function App() {
 
               {/* Region Management Route (Admin Only) */}
               <Route
-                path="/admin/regions" // <--- NEW ROUTE PATH
+                path="/admin/regions"
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <RegionsManagement />
