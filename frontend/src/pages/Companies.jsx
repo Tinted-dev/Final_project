@@ -1,89 +1,71 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { Link } from 'react-router-dom';
 
 export default function Companies() {
-  const [companies, setCompanies] = useState([]);
-  const [regions, setRegions] = useState([]);
-  const [selectedRegion, setSelectedRegion] = useState('');
+  const [allCompanies, setAllCompanies] = useState([]); // Stores all fetched companies
+  const [filteredCompanies, setFilteredCompanies] = useState([]); // Stores companies after filtering
+  const [regions, setRegions] = useState([]); // Stores available regions for the filter
+  const [selectedRegion, setSelectedRegion] = useState(''); // State for the selected region filter
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { user, isAdmin, isCollector } = useAuth(); // Destructure user, isAdmin, isCollector
-
-  // Logging for debugging (keep for now, remove later)
-  useEffect(() => {
-    console.log("Companies.jsx: User object:", user);
-    console.log("Companies.jsx: isAdmin:", isAdmin);
-    console.log("Companies.jsx: isCollector:", isCollector);
-  }, [user, isAdmin, isCollector]);
-
-  const fetchCompanies = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const url = selectedRegion
-        ? `http://localhost:5000/api/companies?region_id=${selectedRegion}`
-        : 'http://localhost:5000/api/companies';
-      
-      const res = await axios.get(url);
-      setCompanies(res.data);
-    } catch (err) {
-      console.error("Error fetching companies:", err);
-      setError('Failed to fetch companies.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchCompanies();
-  }, [selectedRegion]);
-
-  useEffect(() => {
-    const fetchRegions = async () => {
+    const fetchInitialData = async () => {
+      setLoading(true);
+      setError('');
       try {
-        const res = await axios.get('http://localhost:5000/api/regions/'); // Trailing slash
-        setRegions(res.data);
+        // Fetch all companies
+        const companiesRes = await axios.get('http://localhost:5000/api/companies/');
+        setAllCompanies(companiesRes.data);
+        setFilteredCompanies(companiesRes.data); // Initially, display all companies
+
+        // Fetch regions for the filter dropdown
+        const regionsRes = await axios.get('http://localhost:5000/api/regions/');
+        setRegions(regionsRes.data);
       } catch (err) {
-        console.error("Error fetching regions:", err);
+        console.error("Error fetching initial data:", err);
+        setError('Failed to load companies or regions.');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchRegions();
+    fetchInitialData();
   }, []);
 
-  const handleRegionChange = (event) => {
-    setSelectedRegion(event.target.value);
+  // Effect to apply filter whenever selectedRegion or allCompanies changes
+  useEffect(() => {
+    if (selectedRegion === '' || selectedRegion === 'all') {
+      setFilteredCompanies(allCompanies); // Show all companies if no region selected
+    } else {
+      const companiesInRegion = allCompanies.filter(company =>
+        company.region && company.region.id === Number(selectedRegion)
+      );
+      setFilteredCompanies(companiesInRegion);
+    }
+  }, [selectedRegion, allCompanies]);
+
+  const handleRegionChange = (e) => {
+    setSelectedRegion(e.target.value);
   };
 
-  if (loading) return <p>Loading companies...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (loading) return <p className="text-center mt-8 text-gray-600">Loading companies and regions...</p>;
+  if (error) return <p className="text-center mt-8 text-red-600 font-semibold">{error}</p>;
 
   return (
     <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-semibold mb-4">Companies</h2>
-      {/* Show "Add New Company" only if user is admin */}
-      {isAdmin && ( // <--- CHANGED: Only isAdmin can see this button
-        <Link
-          to="/companies/new"
-          className="inline-block mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-        >
-          Add New Company
-        </Link>
-      )}
-
+      <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Our Partner Companies</h1>
+      
       {/* Region Filter Dropdown */}
-      <div className="mb-4">
-        <label htmlFor="region-filter" className="block text-gray-700 text-sm font-bold mb-2">
-          Filter by Region:
-        </label>
+      <div className="mb-8 max-w-xs mx-auto">
+        <label htmlFor="region-filter" className="block text-sm font-medium text-gray-700 mb-2">Filter by Region:</label>
         <select
           id="region-filter"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
           value={selectedRegion}
           onChange={handleRegionChange}
-          className="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         >
-          <option value="">All Regions</option>
+          <option value="all">All Regions</option>
           {regions.map(region => (
             <option key={region.id} value={region.id}>
               {region.name}
@@ -92,31 +74,40 @@ export default function Companies() {
         </select>
       </div>
 
-      <ul className="space-y-3">
-        {companies.map(company => (
-          <li key={company.id} className="border rounded p-4 shadow-sm hover:shadow-md transition">
-            <Link to={`/companies/${company.id}`} className="text-lg font-semibold text-blue-600 hover:underline">
-              {company.name}
-            </Link>
-            <p className="text-gray-700"><strong>Email:</strong> {company.email || 'N/A'}</p>
-            <p className="text-gray-700"><strong>Phone:</strong> {company.phone || 'N/A'}</p>
-            <p className="text-gray-700"><strong>Status:</strong> {company.status || 'N/A'}</p>
-            <p className="text-gray-700"><strong>Region:</strong> {company.region ? company.region.name : 'N/A'}</p>
-            <p className="text-gray-700">{company.description || 'No description available'}</p>
-            
-            <p className="text-gray-700 mt-2"><strong>Services:</strong></p>
-            {company.services && company.services.length > 0 ? (
-              <ul className="list-disc list-inside ml-4">
-                {company.services.map(service => (
-                  <li key={service.id}>{service.name} ({service.description || 'No description'})</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-700 ml-4">No services provided.</p>
-            )}
-          </li>
-        ))}
-      </ul>
+      {filteredCompanies.length === 0 ? (
+        <p className="text-center mt-8 text-gray-600">No companies found for the selected region.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCompanies.map((company) => (
+            <div key={company.id} className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 flex flex-col">
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">{company.name}</h2>
+              <p className="text-gray-600 text-sm mb-1">
+                <strong className="font-medium">Email:</strong> {company.email || 'N/A'}
+              </p>
+              <p className="text-gray-600 text-sm mb-1">
+                <strong className="font-medium">Phone:</strong> {company.phone || 'N/A'}
+              </p>
+              <p className="text-gray-600 text-sm mb-1">
+                <strong className="font-medium">Region:</strong> {company.region ? company.region.name : 'N/A'}
+              </p>
+              <p className="text-gray-600 text-sm mb-3">
+                <strong className="font-medium">Status:</strong>{' '}
+                <span className={`font-bold ${company.status === 'approved' ? 'text-green-600' : company.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'}`}>
+                  {company.status.toUpperCase()}
+                </span>
+              </p>
+              <div className="mt-auto pt-4"> {/* Push button to bottom */}
+                <Link
+                  to={`/companies/${company.id}`}
+                  className="btn-primary inline-block text-center w-full"
+                >
+                  View Details
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

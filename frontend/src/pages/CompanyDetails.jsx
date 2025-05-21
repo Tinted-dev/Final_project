@@ -1,19 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useAuth } from '../context/AuthContext';
 
 export default function CompanyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, accessToken, isAdmin, isCollector } = useAuth(); // Destructure isAdmin and isCollector
-
-  // Logging for debugging (keep for now, remove later)
-  useEffect(() => {
-    console.log("CompanyDetails.jsx: User object:", user);
-    console.log("CompanyDetails.jsx: isAdmin:", isAdmin);
-    console.log("CompanyDetails.jsx: isCollector:", isCollector);
-  }, [user, isAdmin, isCollector]);
+  const { accessToken, isAdmin } = useAuth();
 
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,13 +49,13 @@ export default function CompanyDetails() {
   }, [id]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/regions/') // Trailing slash
+    axios.get('http://localhost:5000/api/regions/')
       .then(res => setRegions(res.data))
       .catch(err => console.error("Error fetching regions:", err));
   }, []);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/services/') // Trailing slash
+    axios.get('http://localhost:5000/api/services/')
       .then(res => setAllServices(res.data))
       .catch(err => console.error("Error fetching services:", err));
   }, []);
@@ -144,10 +137,10 @@ export default function CompanyDetails() {
   return (
     <div className="container mx-auto p-4">
       {editMode ? (
-        <form onSubmit={handleUpdate} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">Edit Company</h3>
-          <div className="mb-4">
-            <label htmlFor="name" className="block mb-1 font-medium text-gray-700">Name</label>
+        <form onSubmit={handleUpdate} className="max-w-lg mx-auto bg-white p-8 rounded-xl shadow-lg space-y-6">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-800 text-center">Edit Company</h3>
+          <div>
+            <label htmlFor="name" className="block mb-2 font-medium text-gray-700">Name</label>
             <input
               type="text"
               id="name"
@@ -155,61 +148,55 @@ export default function CompanyDetails() {
               value={form.name}
               onChange={handleChange}
               required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div className="mb-4">
-            <label htmlFor="description" className="block mb-1 font-medium text-gray-700">Description</label>
+          <div>
+            <label htmlFor="description" className="block mb-2 font-medium text-gray-700">Description</label>
             <textarea
               id="description"
               name="description"
               value={form.description}
               onChange={handleChange}
-              rows="3"
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              rows="4"
             />
           </div>
-          <div className="mb-4">
-            <label htmlFor="email" className="block mb-1 font-medium text-gray-700">Email</label>
+          <div>
+            <label htmlFor="email" className="block mb-2 font-medium text-gray-700">Email</label>
             <input
               type="email"
               id="email"
               name="email"
               value={form.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div className="mb-4">
-            <label htmlFor="phone" className="block mb-1 font-medium text-gray-700">Phone</label>
+          <div>
+            <label htmlFor="phone" className="block mb-2 font-medium text-gray-700">Phone</label>
             <input
               type="text"
               id="phone"
               name="phone"
               value={form.phone}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div className="mb-4">
-            <label htmlFor="status" className="block mb-1 font-medium text-gray-700">Status</label>
+          <div>
+            <label htmlFor="status" className="block mb-2 font-medium text-gray-700">Status</label>
             <input
               type="text"
               id="status"
               name="status"
               value={form.status}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div className="mb-4">
-            <label htmlFor="region_id" className="block mb-1 font-medium text-gray-700">Region</label>
+          <div>
+            <label htmlFor="region_id" className="block mb-2 font-medium text-gray-700">Region</label>
             <select
               id="region_id"
               name="region_id"
               value={form.region_id}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a region</option>
               {regions.map(region => (
@@ -217,15 +204,15 @@ export default function CompanyDetails() {
               ))}
             </select>
           </div>
-          <div className="mb-4">
-            <label htmlFor="service_ids" className="block mb-1 font-medium text-gray-700">Services</label>
+          <div>
+            <label htmlFor="services" className="block mb-2 font-medium text-gray-700">Services</label>
             <select
-              id="service_ids"
-              name="service_ids"
+              id="services"
+              name="services"
               multiple
               value={form.services.map(String)}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 h-32 focus:ring-blue-500 focus:border-blue-500"
+              className="h-40"
             >
               {allServices.map(service => (
                 <option key={service.id} value={service.id}>{service.name}</option>
@@ -235,54 +222,61 @@ export default function CompanyDetails() {
           </div>
 
           {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
-          <div className="flex space-x-2 justify-end">
+          <div className="flex justify-end space-x-3">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              className="btn-primary"
             >
               Save Changes
             </button>
             <button
               type="button"
               onClick={() => setEditMode(false)}
-              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition"
+              className="btn-secondary"
             >
               Cancel
             </button>
           </div>
         </form>
       ) : (
-        <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-2 text-gray-800">{company.name}</h2>
-          <p className="text-gray-700 mb-2"><strong>Email:</strong> {company.email || 'N/A'}</p>
-          <p className="text-gray-700 mb-2"><strong>Phone:</strong> {company.phone || 'N/A'}</p>
-          <p className="text-gray-700 mb-2"><strong>Status:</strong> {company.status || 'N/A'}</p>
-          <p className="text-gray-700 mb-2"><strong>Region:</strong> {company.region ? company.region.name : 'N/A'}</p>
-          <p className="text-gray-700 mb-4"><strong>Description:</strong> {company.description || 'No description available'}</p>
-          
-          <p className="text-gray-700 mt-4 font-semibold">Services:</p>
-          {company.services && company.services.length > 0 ? (
-            <ul className="list-disc list-inside ml-4">
-              {company.services.map(service => (
-                <li key={service.id} className="text-gray-700">{service.name} ({service.description || 'No description'})</li>
+        <div className="max-w-lg mx-auto bg-white p-8 rounded-xl shadow-lg">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-center">{company.name}</h2>
+          <div className="space-y-3 text-gray-700">
+            <p><strong>Email:</strong> {company.email || 'N/A'}</p>
+            <p><strong>Phone:</strong> {company.phone || 'N/A'}</p>
+            <p><strong>Status:</strong>{' '}
+              <span className={`font-bold ${company.status === 'approved' ? 'text-green-600' : company.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'}`}>
+                {company.status.toUpperCase()}
+              </span>
+            </p>
+            <p><strong>Region:</strong> {company.region ? company.region.name : 'N/A'}</p>
+            <p><strong>Description:</strong> {company.description || 'No description available'}</p>
+            
+            <h3 className="text-lg font-semibold mt-5 mb-2">Services Offered:</h3>
+            {company.services && company.services.length > 0 ? (
+              <ul className="list-disc list-inside ml-4 space-y-1">
+                {company.services.map(service => (
+                  <li key={service.id} className="text-gray-700">
+                    {service.name} ({service.description || 'No description'})
+                  </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-700 ml-4">No services provided.</p>
+              <p className="ml-4 text-gray-600">No services provided.</p>
             )}
+          </div>
 
-          {/* Show Edit/Delete buttons only if user is admin */}
-          {isAdmin && ( // <--- Conditional rendering for the buttons
-            <div className="mt-6 space-x-2">
+          {isAdmin && (
+            <div className="mt-8 flex space-x-3 justify-end">
               <button
                 onClick={() => setEditMode(true)}
-                className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
+                className="btn-warning"
               >
                 Edit
               </button>
               <button
                 onClick={handleDelete}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+                className="btn-danger"
               >
                 Delete
               </button>

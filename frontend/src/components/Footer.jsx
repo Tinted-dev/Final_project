@@ -1,9 +1,13 @@
+import React from 'react';
+
 export default function Footer() {
   return (
-    <footer className="bg-gray-100 text-center py-6 mt-12">
-      <p className="text-gray-600 text-sm">
-        &copy; {new Date().getFullYear()} Garbage Collectors App. All rights reserved.
-      </p>
+    <footer className="bg-gray-800 text-white p-4 text-center mt-auto shadow-inner">
+      <div className="container mx-auto">
+        <p className="text-sm">
+          &copy; {new Date().getFullYear()} Garbage Collection Portal. All rights reserved.
+        </p>
+      </div>
     </footer>
-  )
+  );
 }

@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios'; // Import axios for fetching regions/services
+import axios from 'axios';
 
 export default function RegisterCompany() {
-  const { user, register } = useAuth(); // Use the general register function if it can handle company registration
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Combined form state for user credentials and company details
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    user_email: '', // Email for the user account
-    name: '',       // Company name
-    email: '',      // Company email
+    user_email: '',
+    name: '',
+    email: '',
     phone: '',
     description: '',
     region_id: '',
-    services: [],   // Array of selected service IDs
+    services: [],
   });
 
   const [regions, setRegions] = useState([]);
@@ -25,23 +24,20 @@ export default function RegisterCompany() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in (though typically register is for unauthenticated users)
   useEffect(() => {
     if (user) {
-      // Redirect based on role if already logged in
       if (user.role === 'admin') {
         navigate('/admin-dashboard');
       } else if (user.role === 'collector') {
         navigate('/collector-dashboard');
       } else if (user.role === 'company_owner') {
-        navigate('/my-company-dashboard'); // Redirect company owners to their specific dashboard
+        navigate('/my-company-dashboard');
       } else {
-        navigate('/'); // Default for other users
+        navigate('/');
       }
     }
   }, [user, navigate]);
 
-  // Fetch regions and services on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -80,7 +76,6 @@ export default function RegisterCompany() {
 
     const { username, password, user_email, name, email, phone, description, region_id, services } = formData;
 
-    // Basic validation
     if (!username.trim() || !password || !user_email.trim() || !name.trim() || !email.trim() || !phone.trim() || !region_id) {
       setError('Please fill in all required fields (username, password, user email, company name, company email, phone, and select a region).');
       setLoading(false);
@@ -88,7 +83,6 @@ export default function RegisterCompany() {
     }
 
     try {
-      // Call the new register-company endpoint directly
       const response = await axios.post('http://localhost:5000/api/auth/register-company', {
         username,
         password,
@@ -97,22 +91,16 @@ export default function RegisterCompany() {
         email,
         phone,
         description,
-        region_id: Number(region_id), // Ensure it's a number
-        services: services.map(Number), // Ensure services are numbers
+        region_id: Number(region_id),
+        services: services.map(Number),
       });
 
-      const { access_token, user: registeredUser } = response.data;
+      const { access_token } = response.data;
 
-      // Manually set token and user in AuthContext (or call login if AuthContext's register doesn't handle this)
-      // For now, assuming AuthContext's 'register' is for simple user registration,
-      // so we'll handle the token/user state directly here, then trigger AuthContext update.
       localStorage.setItem('access_token', access_token);
-      // Trigger AuthContext's useEffect to pick up the new token and user state
-      // A more robust way would be to have AuthContext's login/register handle the response.
-      // For simplicity, we'll just navigate, and AuthContext's useEffect will run.
       
       alert('Company registered successfully! You are now logged in.');
-      navigate('/my-company-dashboard'); // Redirect to the company owner's dashboard
+      navigate('/my-company-dashboard');
     } catch (err) {
       console.error("Company registration failed:", err.response?.data || err.message);
       setError(err.response?.data?.error || 'An unexpected error occurred during company registration. Please try again.');
@@ -122,126 +110,131 @@ export default function RegisterCompany() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded shadow">
-      <h1 className="text-2xl mb-6 font-semibold text-center">Register Your Company</h1>
-      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+    <div className="max-w-3xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-lg">
+      <h1 className="text-3xl mb-8 font-bold text-center text-gray-800">Register Your Company</h1>
+      {error && <p className="text-red-600 text-sm text-center mb-6">{error}</p>}
       
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         {/* User Credentials */}
-        <h2 className="text-xl font-semibold mt-6 mb-2">Login Credentials</h2>
-        <input
-          type="text"
-          name="username"
-          placeholder="Choose a Username"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          disabled={loading}
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          disabled={loading}
-        />
-        <input
-          type="email"
-          name="user_email"
-          placeholder="Your Email (for login)"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={formData.user_email}
-          onChange={handleChange}
-          required
-          disabled={loading}
-        />
+        <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-700">Login Credentials</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="username"
+              placeholder="Choose a Username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+            <div className="md:col-span-2">
+              <input
+                type="email"
+                name="user_email"
+                placeholder="Your Email (for login)"
+                value={formData.user_email}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Company Details */}
-        <h2 className="text-xl font-semibold mt-6 mb-2">Company Information</h2>
-        <input
-          type="text"
-          name="name"
-          placeholder="Company Name"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          disabled={loading}
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Company Email"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          disabled={loading}
-        />
-        <input
-          type="text"
-          name="phone"
-          placeholder="Company Phone"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={formData.phone}
-          onChange={handleChange}
-          required
-          disabled={loading}
-        />
-        <textarea
-          name="description"
-          placeholder="Company Description (Optional)"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={formData.description}
-          onChange={handleChange}
-          rows="3"
-          disabled={loading}
-        />
-        <select
-          name="region_id"
-          className="w-full p-2 border border-gray-300 rounded"
-          value={formData.region_id}
-          onChange={handleChange}
-          required
-          disabled={loading}
-        >
-          <option value="">Select Company Region</option>
-          {regions.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </select>
-        <select
-          name="services"
-          multiple
-          className="w-full p-2 border border-gray-300 rounded h-32"
-          value={formData.services.map(String)}
-          onChange={handleServiceChange}
-          disabled={loading}
-        >
-          <option value="" disabled>Select Services (Hold Ctrl/Cmd)</option>
-          {allServices.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-        <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple services.</p>
+        <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-700">Company Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              name="name"
+              placeholder="Company Name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Company Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+            <input
+              type="text"
+              name="phone"
+              placeholder="Company Phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+            <select
+              name="region_id"
+              value={formData.region_id}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            >
+              <option value="">Select Company Region</option>
+              {regions.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+            <div className="md:col-span-2">
+              <textarea
+                name="description"
+                placeholder="Company Description (Optional)"
+                value={formData.description}
+                onChange={handleChange}
+                rows="4"
+                disabled={loading}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label htmlFor="services" className="block text-sm font-medium text-gray-700 mb-2">Select Services (Hold Ctrl/Cmd to select multiple)</label>
+              <select
+                name="services"
+                multiple
+                value={formData.services.map(String)}
+                onChange={handleServiceChange}
+                disabled={loading}
+                className="h-40"
+              >
+                {allServices.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full btn-success"
         >
           {loading ? 'Registering...' : 'Register Company'}
         </button>
       </form>
-      <p className="text-center text-sm text-gray-600 mt-4">
+      <p className="text-center text-sm text-gray-600 mt-6">
         Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link>
       </p>
     </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -16,10 +16,10 @@ export default function Login() {
       return <Navigate to="/admin-dashboard" replace />;
     } else if (user.role === 'collector') {
       return <Navigate to="/collector-dashboard" replace />;
-    } else if (user.role === 'company_owner') { // <--- NEW: Redirect company_owner
+    } else if (user.role === 'company_owner') {
       return <Navigate to="/my-company-dashboard" replace />;
     } else {
-      return <Navigate to="/" replace />; // Default for other users
+      return <Navigate to="/" replace />;
     }
   }
 
@@ -44,12 +44,11 @@ export default function Login() {
       const result = await login(username, password);
 
       if (result && result.success && result.user) {
-        // After successful login, check the role from the returned user object
         if (result.user.role === 'admin') {
           navigate('/admin-dashboard');
         } else if (result.user.role === 'collector') {
           navigate('/collector-dashboard');
-        } else if (result.user.role === 'company_owner') { // <--- NEW: Redirect company_owner
+        } else if (result.user.role === 'company_owner') {
           navigate('/my-company-dashboard');
         } else {
           navigate('/');
@@ -70,19 +69,19 @@ export default function Login() {
   };
 
   return (
-    <div className="max-w-sm mx-auto mt-20 p-6 bg-white rounded shadow">
-      <h1 className="text-2xl mb-6 font-semibold text-center">Login</h1>
-      <form onSubmit={handleSubmit} noValidate>
+    <div className="max-w-md mx-auto mt-16 p-8 bg-white rounded-xl shadow-lg">
+      <h1 className="text-3xl mb-8 font-bold text-center text-gray-800">Welcome Back!</h1>
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         {/* Username Input */}
-        <div className="mb-4">
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+        <div>
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">Username</label>
           <input
             id="username"
             name="username"
             type="text"
             value={formData.username}
             onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
             autoComplete="username"
             required
             disabled={loading}
@@ -90,15 +89,15 @@ export default function Login() {
         </div>
 
         {/* Password Input */}
-        <div className="mb-6">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
           <input
             id="password"
             name="password"
             type="password"
             value={formData.password}
             onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
             autoComplete="current-password"
             required
             disabled={loading}
@@ -106,17 +105,20 @@ export default function Login() {
         </div>
 
         {/* Error Message Display */}
-        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+        {error && <p className="text-red-600 text-sm text-center mb-4">{error}</p>}
 
         {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full btn-primary"
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
+      <p className="text-center text-sm text-gray-600 mt-6">
+        Don't have a company account? <Link to="/register-company" className="text-blue-600 hover:underline">Register your company here</Link>
+      </p>
     </div>
   );
 }

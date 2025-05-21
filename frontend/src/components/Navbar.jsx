@@ -6,38 +6,44 @@ export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
 
   return (
-    <nav className="bg-gray-800 p-4 text-white">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold">Garbage App</Link>
-        <div className="space-x-4">
-          <Link to="/" className="hover:text-gray-300">Home</Link>
-          <Link to="/companies" className="hover:text-gray-300">Companies</Link>
+    <nav className="bg-gray-800 p-4 text-white shadow-lg">
+      <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
+        <Link to="/" className="text-2xl font-bold text-white mb-3 md:mb-0 hover:text-blue-300 transition duration-200">
+          GarbageApp
+        </Link>
+        <div className="flex flex-wrap justify-center md:justify-end items-center space-x-4">
+          <Link to="/" className="hover:text-blue-300 transition duration-200">Home</Link>
+          <Link to="/companies" className="hover:text-blue-300 transition duration-200">Companies</Link>
           
           {/* Admin Links */}
           {isAdmin && (
             <>
-              <Link to="/admin-dashboard" className="hover:text-gray-300">Admin Dashboard</Link>
-              <Link to="/admin/services" className="hover:text-gray-300">Manage Services</Link>
-              <Link to="/admin/regions" className="hover:text-gray-300">Manage Regions</Link>
+              <Link to="/admin-dashboard" className="hover:text-blue-300 transition duration-200">Admin Dashboard</Link>
+              <Link to="/admin/services" className="hover:text-blue-300 transition duration-200">Manage Services</Link>
+              <Link to="/admin/regions" className="hover:text-blue-300 transition duration-200">Manage Regions</Link>
             </>
           )}
 
           {/* Company Owner Link */}
           {user && user.role === 'company_owner' && (
-            <Link to="/my-company-dashboard" className="hover:text-gray-300">My Company</Link>
+            <Link to="/my-company-dashboard" className="hover:text-blue-300 transition duration-200">My Company</Link>
           )}
 
           {user ? (
             <>
               {/* My Profile Link (for any logged-in user) */}
-              <Link to="/my-profile" className="hover:text-gray-300">My Profile</Link>
-              <span className="text-gray-300">Welcome, {user.username} ({user.role})</span>
-              <button onClick={logout} className="hover:text-gray-300">Logout</button>
+              <Link to="/my-profile" className="hover:text-blue-300 transition duration-200">My Profile</Link>
+              <span className="text-gray-300 text-sm md:text-base px-2 py-1 bg-gray-700 rounded-md">
+                Welcome, {user.username} ({user.role})
+              </span>
+              <button onClick={logout} className="ml-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition duration-200 shadow-sm">
+                Logout
+              </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="hover:text-gray-300">Login</Link>
-              <Link to="/register-company" className="hover:text-gray-300">Register Company</Link>
+              <Link to="/login" className="hover:text-blue-300 transition duration-200">Login</Link>
+              <Link to="/register-company" className="hover:text-blue-300 transition duration-200">Register Company</Link>
             </>
           )}
         </div>
