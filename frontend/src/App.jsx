@@ -5,17 +5,18 @@ import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import RegisterCompany from './pages/RegisterCompany'; // <--- CHANGED: Import RegisterCompany
-import MyCompanyDashboard from './pages/MyCompanyDashboard'; // <--- NEW IMPORT
+import RegisterCompany from './pages/RegisterCompany';
+import MyCompanyDashboard from './pages/MyCompanyDashboard';
 import Companies from './pages/Companies';
 import CompanyDetails from './pages/CompanyDetails';
 import CreateCompany from './pages/CreateCompany';
 import EditCompany from './pages/EditCompany';
 import ServicesManagement from './pages/ServicesManagement';
 import RegionsManagement from './pages/RegionsManagement';
+import UserProfile from './pages/UserProfile'; // <--- NEW IMPORT
 import './index.css';
 
-// Placeholder components for other dashboards (if not already fully implemented)
+// Placeholder components for other dashboards
 const AdminDashboard = () => <h2 className="text-3xl text-center mt-20">Admin Dashboard</h2>;
 const CollectorDashboard = () => <h2 className="text-3xl text-center mt-20">Collector Dashboard</h2>;
 const UserDashboard = () => <h2 className="text-3xl text-center mt-20">User Dashboard</h2>;
@@ -32,13 +33,12 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/register-company" element={<RegisterCompany />} /> {/* <--- CHANGED: New path for company registration */}
-              {/* The old /register route is now gone */}
+              <Route path="/register-company" element={<RegisterCompany />} />
 
               <Route path="/companies" element={<Companies />} />
               <Route path="/companies/:id" element={<CompanyDetails />} />
 
-              {/* Role-Based Dashboards (Protected) */}
+              {/* Protected Routes for Dashboards */}
               <Route
                 path="/admin-dashboard"
                 element={
@@ -64,10 +64,18 @@ function App() {
                 }
               />
               <Route
-                path="/my-company-dashboard" // <--- NEW PROTECTED ROUTE FOR COMPANY OWNER
+                path="/my-company-dashboard"
                 element={
                   <ProtectedRoute allowedRoles={['company_owner']}>
                     <MyCompanyDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-profile" // <--- NEW PROTECTED ROUTE FOR USER PROFILE
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'collector', 'user', 'company_owner']}> {/* Accessible by any logged-in user */}
+                    <UserProfile />
                   </ProtectedRoute>
                 }
               />
@@ -90,7 +98,7 @@ function App() {
                 }
               />
 
-              {/* Service Management Route (Admin Only) */}
+              {/* Admin Management Routes */}
               <Route
                 path="/admin/services"
                 element={
@@ -99,8 +107,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
-              {/* Region Management Route (Admin Only) */}
               <Route
                 path="/admin/regions"
                 element={

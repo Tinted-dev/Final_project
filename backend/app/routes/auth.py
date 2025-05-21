@@ -35,7 +35,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        access_token = create_access_token(identity=str(new_user.id)) # <--- CHANGED: Convert to string
+        access_token = create_access_token(identity=str(new_user.id))
         logger.info(f"User '{new_user.username}' registered successfully.")
         return jsonify({
             'message': 'User registered successfully',
@@ -93,7 +93,6 @@ def register_company():
         new_user = User(username=username, email=user_email, role='company_owner')
         new_user.set_password(password)
         db.session.add(new_user)
-        # We don't flush here yet, as new_company.id is not available
 
         # 2. Create the Company record
         region = None
@@ -125,7 +124,7 @@ def register_company():
 
         db.session.commit() # Commit the entire transaction
 
-        access_token = create_access_token(identity=str(new_user.id)) # <--- CHANGED: Convert to string
+        access_token = create_access_token(identity=str(new_user.id))
         logger.info(f"Company '{new_company.name}' and owner '{new_user.username}' registered successfully.")
         return jsonify({
             'message': 'Company and owner registered successfully',
@@ -159,7 +158,7 @@ def login():
     user = User.query.filter_by(username=username).first()
 
     if user and user.check_password(password):
-        access_token = create_access_token(identity=str(user.id)) # <--- CHANGED: Convert to string
+        access_token = create_access_token(identity=str(user.id))
         logger.info(f"User '{user.username}' logged in successfully.")
         
         user_data = {
@@ -180,28 +179,3 @@ def login():
     else:
         logger.warning(f"Failed login attempt for username: {username}")
         return jsonify({'msg': 'Bad username or password'}), 401
-
-
-@auth_bp.route('/me', methods=['GET'])
-@jwt_required()
-def me():
-    """
-    Returns current user's details.
-    """
-    user_id = get_jwt_identity() # This will already be a string as it's extracted from the token
-    user = User.query.get(int(user_id))
-
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-
-    user_data = {
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'role': user.role
-    }
-    # If the user is a company owner, include their company_id
-    if user.role == 'company_owner' and user.company_profile:
-        user_data['company_id'] = user.company_profile.id
-
-    return jsonify(user_data)

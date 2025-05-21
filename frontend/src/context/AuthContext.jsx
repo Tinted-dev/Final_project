@@ -19,11 +19,10 @@ export function AuthProvider({ children }) {
     if (storedAccessToken) {
       setAccessToken(storedAccessToken);
       
-      axios.get('http://localhost:5000/api/auth/me', {
+      axios.get('http://localhost:5000/api/users/me', { // <--- CHANGED: New endpoint for /me
         headers: { Authorization: `Bearer ${storedAccessToken}` }
       })
       .then(res => {
-        // CRITICAL: Ensure res.data contains the 'role' and 'company_id' (if applicable)
         setUser(res.data);
         console.log("AuthContext: User fetched from /me successfully:", res.data);
       })
@@ -43,12 +42,12 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     console.log("AuthContext: Attempting login for username:", username);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/token', { username, password }); // Changed to /auth/token
+      const response = await axios.post('http://localhost:5000/api/auth/token', { username, password });
       const { access_token, user: loggedInUser } = response.data; 
 
       localStorage.setItem('access_token', access_token);
       setAccessToken(access_token);
-      setUser(loggedInUser); // loggedInUser should now contain 'company_id' if role is 'company_owner'
+      setUser(loggedInUser);
       console.log("AuthContext: Login successful. Token and user set:", loggedInUser);
       
       return { success: true, user: loggedInUser };
@@ -58,9 +57,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // The 'register' function will now be for standard users only,
-  // 'RegisterCompany.jsx' will call '/api/auth/register-company' directly.
-  // So, this 'register' function might not be used by the new company registration flow.
   const register = async (username, email, password) => {
     console.log("AuthContext: Attempting standard user registration for username:", username);
     try {
@@ -88,16 +84,16 @@ export function AuthProvider({ children }) {
   };
 
   const contextValue = {
-    user, // This object contains { id, username, email, role, company_id? }
+    user,
     accessToken,
     loading,
     login,
-    register, // Still available for potential standard user registration if needed
+    register,
     logout,
     isAdmin: user?.role === 'admin',
     isCollector: user?.role === 'collector',
     isUser: user?.role === 'user',
-    isCompanyOwner: user?.role === 'company_owner', // <--- NEW HELPER FLAG
+    isCompanyOwner: user?.role === 'company_owner',
   };
 
   return (

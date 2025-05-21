@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-  const { user, logout, isAdmin, isCompanyOwner } = useAuth(); // Destructure isCompanyOwner
+  const { user, logout, isAdmin } = useAuth(); // isAdmin is still used for admin-specific links
 
   return (
     <nav className="bg-gray-800 p-4 text-white">
@@ -21,20 +21,22 @@ export default function Navbar() {
             </>
           )}
 
-          {/* Company Owner Link */}
-          {user && user.role === 'company_owner' && ( // <--- NEW: Link for company owners
+          {/* Company Owner Link (remains) */}
+          {user && user.role === 'company_owner' && (
             <Link to="/my-company-dashboard" className="hover:text-gray-300">My Company</Link>
           )}
 
           {user ? (
             <>
+              {/* My Profile Link (for any logged-in user) */}
+              <Link to="/my-profile" className="hover:text-gray-300">My Profile</Link> {/* <--- NEW LINK */}
               <span className="text-gray-300">Welcome, {user.username} ({user.role})</span>
               <button onClick={logout} className="hover:text-gray-300">Logout</button>
             </>
           ) : (
             <>
               <Link to="/login" className="hover:text-gray-300">Login</Link>
-              <Link to="/register-company" className="hover:text-gray-300">Register Company</Link> {/* <--- CHANGED: Link to new registration page */}
+              <Link to="/register-company" className="hover:text-gray-300">Register Company</Link>
             </>
           )}
         </div>

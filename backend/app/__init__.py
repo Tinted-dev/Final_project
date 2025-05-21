@@ -13,7 +13,8 @@ from app.extensions import db
 from app.routes.auth import auth_bp
 from app.routes.companies import companies_bp
 from app.routes.services import services_bp
-from app.routes.regions import regions_bp # <--- NEW IMPORT: Ensure this line is present
+from app.routes.regions import regions_bp
+from app.routes.users import users_bp # <--- NEW IMPORT
 
 def create_app():
     app = Flask(__name__)
@@ -37,8 +38,9 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(companies_bp)
     app.register_blueprint(services_bp)
-    app.register_blueprint(regions_bp) # <--- NEW REGISTRATION: Ensure this line is present
+    app.register_blueprint(regions_bp)
+    app.register_blueprint(users_bp) # <--- NEW REGISTRATION
 
-    print(f"Blueprints registered: {app.blueprints.keys()}") # <--- ADDED FOR DEBUGGING: Confirm registration
+    print(f"Blueprints registered: {app.blueprints.keys()}")
 
     return app
