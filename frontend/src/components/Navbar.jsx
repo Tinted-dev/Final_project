@@ -9,7 +9,7 @@ export default function Navbar() {
     <nav className="bg-gray-800 p-4 text-white shadow-lg">
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
         <Link to="/" className="text-6xl font-bold text-white mb-3 md:mb-0 hover:text-blue-300 transition duration-200">
-          EcoWaste
+        WasteTrack
         </Link>
         <div className="flex flex-wrap justify-center md:justify-end items-center space-x-4">
           <Link to="/" className="hover:text-blue-300 transition duration-200">Home</Link>
