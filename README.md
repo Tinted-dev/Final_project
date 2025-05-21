@@ -1,4 +1,5 @@
 # Final_project
+# Final_project
 ♻️ Garbage Collection Portal
 📑 Table of Contents
 📘 Project Overview
@@ -40,14 +41,21 @@
 📬 Contact
 
 1. 📘 Project Overview
-The Garbage Collection Portal is a full-stack web application designed to streamline the process of finding, managing, and interacting with garbage collection services. It serves as a digital bridge between communities and waste service providers.
+The Garbage Collection Portal is a full-stack web ap
+plication designed to streamline the process of find
+ing, managing, and interacting with garbage collecti
+on services. It serves as a digital bridge between c
+ommunities and waste service providers.
 
 🎯 Key Objectives
-Users: Easily discover and filter garbage collection companies by region and services.
+Users: Easily discover and filter garbage collection
+ companies by region and services.
 
-Companies: Register and manage profiles to reach a broader customer base.
+Companies: Register and manage profiles to reach a b
+roader customer base.
 
-Admins: Manage company approvals, services, regions, and user accounts.
+Admins: Manage company approvals, services, regions,
+ and user accounts.
 
 2. ✨ Features
 🌍 Public & General Users (No Login)
@@ -60,7 +68,8 @@ Admins: Manage company approvals, services, regions, and user accounts.
 🔐 User Authentication & Role-Based Access (RBAC)
 🔑 JWT-based secure login/logout
 
-🧑‍💼 Roles: admin, company_owner, collector (future), user (future)
+🧑‍💼 Roles: admin, company_owner, collector (future)
+, user (future)
 
 🚫 Protected routes
 
@@ -171,7 +180,8 @@ Create .env file:
 env
 Copy
 Edit
-DATABASE_URL="postgresql://user:password@localhost:5000/db_name"
+DATABASE_URL="postgresql://user:password@localhost:5
+000/db_name"
 JWT_SECRET_KEY="your_jwt_secret"
 FLASK_APP=app.py
 FLASK_ENV=development
@@ -245,7 +255,8 @@ Edit own profile
 id, username, email, password_hash, role, company_id
 
 🏢 Company
-id, name, email, phone, description, status, region_id
+id, name, email, phone, description, status, region_
+id
 
 Many-to-Many: Services
 
@@ -313,7 +324,8 @@ Uses REACT_APP_API_BASE_URL
 Managed PostgreSQL instance (e.g., Render DB)
 
 9. ✅ Testing
-A full test checklist is included in the project to verify:
+A full test checklist is included in the project to 
+verify:
 
 Public routes
 
@@ -323,7 +335,8 @@ Company registration/approval
 
 Admin CRUD operations
 
-Refer to Web Application Testing Checklist for details.
+Refer to Web Application Testing Checklist for detai
+ls.
 
 10. 🚧 Future Enhancements
 🔎 Advanced search & filtering
@@ -347,4 +360,3 @@ Developer: TintedDev
 Email: mumbidenis@gmail.com
 
 GitHub: TintedDev
-
