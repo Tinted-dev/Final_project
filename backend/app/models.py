@@ -2,6 +2,14 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
+from sqlalchemy import UniqueConstraint
+
+# Association table for Many-to-Many Company-Service relationship
+company_service_association = db.Table(
+    'company_service_association',
+    db.Column('company_id', db.Integer, db.ForeignKey('companies.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('service_id', db.Integer, db.ForeignKey('services.id', ondelete='CASCADE'), primary_key=True)
+)
 
 
 class User(db.Model):
@@ -11,14 +19,15 @@ class User(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(20), nullable=False)  # "admin" or "collector"
+    role = db.Column(db.String(20), nullable=False)  # "admin" or "collector" or "user"
 
-    # IMPORTANT: Added ondelete='SET NULL' for companies.
-    # If a User is deleted, their associated companies will have user_id set to NULL.
-    # If you want companies to be deleted when user is deleted, change to ondelete='CASCADE'
-    companies = db.relationship('Company', back_populates='user', lazy=True,
-                                foreign_keys='Company.user_id',
-                                cascade="all, delete-orphan") # cascade is needed for SQLAlchemy side if deleting the user
+    companies = db.relationship(
+        'Company',
+        back_populates='user',
+        lazy=True,
+        foreign_keys='Company.user_id',
+        cascade="all"
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -34,21 +43,28 @@ class Company(db.Model):
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     phone = db.Column(db.String(20), nullable=False)
-    status = db.Column(db.String(50), default='pending')
-    # IMPORTANT: Added ondelete='SET NULL' here, or 'CASCADE' if you want Company deleted when User is deleted.
-    # The 'cascade' on the relationship in User model also plays a role.
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True) # Changed nullable to True if SET NULL
-    # IMPORTANT: Added ondelete='SET NULL' for regions.
-    region_id = db.Column(db.Integer, db.ForeignKey('regions.id', ondelete='SET NULL'))
-    description = db.Column(db.Text, nullable=True) # Use db.Text for longer descriptions
-    created_at = db.Column(db.DateTime, default=datetime.utcnow) # Added created_at field for consistency
+    status = db.Column(db.String(50), default='pending', nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     user = db.relationship('User', back_populates='companies')
+
+    region_id = db.Column(db.Integer, db.ForeignKey('regions.id', ondelete='SET NULL'), nullable=True)
     region = db.relationship('Region', back_populates='companies')
-    # IMPORTANT: Added cascade="all, delete-orphan" for services
-    # This ensures that when a Company is deleted via SQLAlchemy, its associated Services are also deleted.
-    services = db.relationship('Service', back_populates='company', lazy=True, cascade="all, delete-orphan")
+
+    services = db.relationship(
+        'Service',
+        secondary=company_service_association,
+        back_populates='companies',
+        lazy='dynamic',
+        cascade="all"
+    )
+
+    __table_args__ = (UniqueConstraint('name', name='_company_name_uc'),)
+
+    def __repr__(self):
+        return f'<Company {self.name}>'
 
 
 class Region(db.Model):
@@ -56,14 +72,16 @@ class Region(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True) # <--- ADDED THIS LINE
 
-    # If you delete a Region, you likely want to set company.region_id to NULL, not delete companies.
-    # Handled by ondelete='SET NULL' in Company.region_id ForeignKey.
     companies = db.relationship('Company', back_populates='region', lazy=True)
     
-    # IMPORTANT: Added cascade="all, delete-orphan" for locations
-    # If a Region is deleted, its associated Locations should be deleted.
-    locations = db.relationship('Location', back_populates='region', lazy=True, cascade="all, delete-orphan")
+    locations = db.relationship(
+        'Location',
+        back_populates='region',
+        lazy=True,
+        cascade="all, delete-orphan"
+    )
 
 
 class Location(db.Model):
@@ -71,8 +89,6 @@ class Location(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    # IMPORTANT: Added ondelete='CASCADE' for regions.
-    # If a Region is deleted, its Locations are deleted.
     region_id = db.Column(db.Integer, db.ForeignKey('regions.id', ondelete='CASCADE'), nullable=False)
 
     region = db.relationship('Region', back_populates='locations')
@@ -84,8 +100,15 @@ class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    # IMPORTANT: Added ondelete='CASCADE' for companies.
-    # If a Company is deleted, its associated Services are deleted.
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id', ondelete='CASCADE'), nullable=False)
+    
+    companies = db.relationship(
+        'Company',
+        secondary=company_service_association,
+        back_populates='services',
+        lazy='dynamic'
+    )
 
-    company = db.relationship('Company', back_populates='services')
+    __table_args__ = (UniqueConstraint('name', name='_service_name_uc'),)
+
+    def __repr__(self):
+        return f'<Service {self.name}>'

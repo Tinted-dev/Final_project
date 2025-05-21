@@ -1,39 +1,44 @@
-# app/__init__.py
+# backend/app/__init__.py
+import logging
 from flask import Flask
-from app.extensions import db, jwt, cors, migrate
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_jwt_extended import JWTManager
+from flask_cors import CORS
+
+from config import Config
+from app.extensions import db
+
+# Import your blueprints
 from app.routes.auth import auth_bp
 from app.routes.companies import companies_bp
-from app.routes.regions import regions_bp
 from app.routes.services import services_bp
-from dotenv import load_dotenv
-import logging
+from app.routes.regions import regions_bp # <--- NEW IMPORT: Ensure this line is present
 
-load_dotenv()
 def create_app():
     app = Flask(__name__)
-    app.config.from_object('config.Config')
+    app.config.from_object(Config)
 
+    # Initialize extensions
     db.init_app(app)
-    jwt.init_app(app)
-    cors.init_app(app, supports_credentials=True)
+    migrate = Migrate(app, db)
+    jwt = JWTManager(app)
+    CORS(app)
 
-    if app.debug: # app.debug is True if FLASK_ENV is 'development'
+    # Configure logging for development
+    if app.debug:
         logging.basicConfig(level=logging.DEBUG,
                             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    else:
+        logging.basicConfig(level=logging.INFO,
+                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
+    # Register blueprints
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(companies_bp)
+    app.register_blueprint(services_bp)
+    app.register_blueprint(regions_bp) # <--- NEW REGISTRATION: Ensure this line is present
 
-    # ✅ Import all models before initializing migrate
-    from app.models import User, Company, Region, Service
-
-    migrate.init_app(app, db)
-
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(companies_bp, url_prefix='/api/companies')
-    app.register_blueprint(regions_bp, url_prefix='/api/regions')
-    app.register_blueprint(services_bp, url_prefix='/api/services')
-
-    @app.route('/api/health')
-    def health():
-        return {'status': 'ok'}, 200
+    print(f"Blueprints registered: {app.blueprints.keys()}") # <--- ADDED FOR DEBUGGING: Confirm registration
 
     return app

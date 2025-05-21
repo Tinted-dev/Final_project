@@ -10,6 +10,8 @@ import Companies from './pages/Companies';
 import CompanyDetails from './pages/CompanyDetails';
 import CreateCompany from './pages/CreateCompany';
 import EditCompany from './pages/EditCompany';
+import ServicesManagement from './pages/ServicesManagement';
+import RegionsManagement from './pages/RegionsManagement'; // <--- NEW IMPORT
 import './index.css';
 
 // Placeholder components for new dashboards
@@ -20,9 +22,8 @@ const UserDashboard = () => <h2 className="text-3xl text-center mt-20">User Dash
 
 function App() {
   return (
-    // CRITICAL FIX: Router must wrap AuthProvider
-    <Router> {/* <--- Router is now the outermost component */}
-      <AuthProvider> {/* <--- AuthProvider is now inside the Router */}
+    <Router>
+      <AuthProvider>
         <div className="flex flex-col min-h-screen">
           <Navbar />
           <main className="flex-grow">
@@ -64,7 +65,7 @@ function App() {
               <Route
                 path="/companies/new"
                 element={
-                  <ProtectedRoute allowedRoles={['admin', 'collector']}>
+                  <ProtectedRoute allowedRoles={['admin']}>
                     <CreateCompany />
                   </ProtectedRoute>
                 }
@@ -72,8 +73,28 @@ function App() {
               <Route
                 path="/edit-company/:id"
                 element={
-                  <ProtectedRoute allowedRoles={['admin', 'collector']}>
+                  <ProtectedRoute allowedRoles={['admin']}>
                     <EditCompany />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Service Management Route (Admin Only) */}
+              <Route
+                path="/admin/services"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <ServicesManagement />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Region Management Route (Admin Only) */}
+              <Route
+                path="/admin/regions" // <--- NEW ROUTE PATH
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <RegionsManagement />
                   </ProtectedRoute>
                 }
               />
