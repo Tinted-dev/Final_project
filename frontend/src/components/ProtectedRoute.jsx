@@ -1,32 +1,31 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// `allowedRoles` will be an array of roles that are allowed to access this route
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, loading } = useAuth(); // Get user and loading state from AuthContext
+  const { user, loading: authLoading, accessToken } = useAuth();
 
-  if (loading) {
-    return <div>Loading authentication...</div>; // Or a spinner
+  console.log("ProtectedRoute: Rendering..."); // <--- DEBUG LOG 1
+  console.log(`ProtectedRoute: authLoading: ${authLoading}, user: ${user ? user.username : 'null'}, user.role: ${user?.role}, accessToken: ${!!accessToken}`); // <--- DEBUG LOG 2
+
+  if (authLoading) {
+    console.log("ProtectedRoute: Auth is loading, returning loading message."); // <--- DEBUG LOG 3
+    return <p className="text-center mt-20 text-gray-600">Loading authentication...</p>;
   }
 
-  // If user is not logged in, redirect to login page
-  if (!user) {
+  if (!user || !accessToken) {
+    console.log("ProtectedRoute: User not authenticated or token missing, redirecting to login."); // <--- DEBUG LOG 4
     return <Navigate to="/login" replace />;
   }
 
-  // If allowedRoles are specified, check if the user's role is in the allowed list
-  if (allowedRoles && allowedRoles.length > 0) {
-    if (!user.role || !allowedRoles.includes(user.role)) {
-      // User is logged in but doesn't have the required role
-      // Redirect to a forbidden page or home, or show an access denied message
-      console.warn(`Access Denied: User role '${user.role}' not in allowed roles: ${allowedRoles.join(', ')}`);
-      return <Navigate to="/" replace />; // Redirect to home or an access denied page
-    }
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    console.log(`ProtectedRoute: User role '${user.role}' not in allowed roles [${allowedRoles.join(', ')}], redirecting to unauthorized.`); // <--- DEBUG LOG 5
+    // You might want a specific unauthorized page here, or just redirect home/login
+    return <Navigate to="/login" replace />; // Or to a /unauthorized page
   }
 
-  // If user is logged in and has the allowed role (or no specific roles are required)
-  return children ? children : <Outlet />;
+  console.log("ProtectedRoute: Conditions met, rendering children."); // <--- DEBUG LOG 6
+  return children;
 };
 
 export default ProtectedRoute;

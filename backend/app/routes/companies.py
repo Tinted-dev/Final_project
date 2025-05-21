@@ -1,6 +1,6 @@
 # backend/app/routes/companies.py
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity # <--- Ensure these are imported
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 import traceback
 import logging
@@ -22,12 +22,10 @@ def role_required(allowed_roles):
         def wrapper(*args, **kwargs):
             current_user_id_str = get_jwt_identity()
             
-            # --- DEBUGGING LOGS START ---
             logger.debug(f"role_required: JWT Identity extracted: {current_user_id_str}")
             if current_user_id_str is None:
                 logger.error("role_required: JWT Identity is None. Token might be missing or invalid.")
                 return jsonify({'msg': 'Authorization token missing or invalid'}), 401
-            # --- DEBUGGING LOGS END ---
 
             try:
                 current_user_id = int(current_user_id_str)
@@ -46,7 +44,6 @@ def role_required(allowed_roles):
                 logger.warning(f"Access Denied: User '{user.username}' (role: {user.role}) attempted to access restricted resource. Allowed roles: {allowed_roles}")
                 return jsonify({'msg': 'Access Denied: Insufficient permissions'}), 403 # Forbidden
             
-            # Pass the user object to the decorated function for further checks
             kwargs['current_user'] = user 
             return fn(*args, **kwargs)
         return wrapper
@@ -72,7 +69,6 @@ companies_bp = Blueprint('companies', __name__, url_prefix='/api/companies')
 
 # Get all companies (can be public or protected, depending on requirements)
 @companies_bp.route('/', methods=['GET'])
-# @jwt_required() # Uncomment this if only logged-in users can view companies
 def get_companies():
     companies = Company.query.all()
     results = [serialize_company(c) for c in companies]
@@ -80,7 +76,6 @@ def get_companies():
 
 # Get company by id (can be public or protected)
 @companies_bp.route('/<int:company_id>', methods=['GET'])
-# @jwt_required() # Uncomment this if only logged-in users can view company details
 def get_company(company_id):
     company = Company.query.get_or_404(company_id)
     return jsonify(serialize_company(company))
@@ -92,20 +87,18 @@ def get_my_company(current_user):
     """
     Allows a company_owner to retrieve their own company details.
     """
-    # --- DEBUGGING LOGS START ---
     logger.debug(f"get_my_company: current_user received: {current_user.username} (ID: {current_user.id})")
     if not current_user.company_profile:
         logger.warning(f"get_my_company: User '{current_user.username}' has no associated company_profile.")
         return jsonify({'error': 'No company profile found for this user'}), 404
-    # --- DEBUGGING LOGS END ---
     return jsonify(serialize_company(current_user.company_profile))
 
 
 # Create a new company (Admin only)
 @companies_bp.route('/', methods=['POST'])
-@role_required(['admin']) # <--- CHANGED: Only admin can create companies
-def create_company(current_user): # current_user is passed by role_required
-    current_user_id = current_user.id # Use current_user object directly
+@role_required(['admin'])
+def create_company(current_user):
+    current_user_id = current_user.id
 
     data = request.get_json()
     logger.info(f"\n--- Create Company Request ---")
@@ -121,7 +114,7 @@ def create_company(current_user): # current_user is passed by role_required
 
     phone = data.get('phone')
     description = data.get('description')
-    status = data.get('status', 'pending')
+    status = data.get('status', 'pending') # Default to pending on creation
 
     region_id = data.get('region_id')
     service_ids = data.get('services', [])
@@ -161,8 +154,8 @@ def create_company(current_user): # current_user is passed by role_required
 
 # Update a company (protected by role and ownership)
 @companies_bp.route('/<int:company_id>', methods=['PUT'])
-@role_required(['admin', 'company_owner']) # <--- CHANGED: Admin or company_owner can update
-def update_company(company_id, current_user): # current_user is passed by role_required
+@role_required(['admin', 'company_owner'])
+def update_company(company_id, current_user):
     logger.info(f"\n--- Update Company Request ---")
     logger.info(f"Update request for company ID: {company_id} by user '{current_user.username}' (ID: {current_user.id}, Role: {current_user.role})")
 
@@ -185,7 +178,8 @@ def update_company(company_id, current_user): # current_user is passed by role_r
         company.email = data.get('email', company.email)
         company.phone = data.get('phone', company.phone)
         company.description = data.get('description', company.description)
-        company.status = data.get('status', company.status)
+        # Status field is NOT updated here by company_owner, only by admin endpoint
+        # company.status = data.get('status', company.status) # Removed for company_owner update
 
         region_id = data.get('region_id')
         if region_id is not None:
@@ -215,10 +209,35 @@ def update_company(company_id, current_user): # current_user is passed by role_r
         logger.exception("Unexpected error during company update:")
         return jsonify({'error': f'Internal server error during update: {str(e)}'}), 500
 
+# NEW: Admin-only endpoint to update company status
+@companies_bp.route('/<int:company_id>/status', methods=['PUT'])
+@role_required(['admin']) # Only admin can change status
+def update_company_status(company_id, current_user):
+    """
+    Allows an admin to update a company's status (e.g., 'pending', 'approved', 'rejected').
+    """
+    company = Company.query.get_or_404(company_id)
+    data = request.get_json()
+    new_status = data.get('status')
+
+    if not new_status or new_status not in ['pending', 'approved', 'rejected']:
+        return jsonify({'error': 'Invalid status provided. Must be "pending", "approved", or "rejected"'}), 400
+
+    try:
+        company.status = new_status
+        db.session.commit()
+        logger.info(f"Admin '{current_user.username}' updated status of Company ID {company_id} to '{new_status}'.")
+        return jsonify({'message': f'Company status updated to {new_status}', 'company': serialize_company(company)}), 200
+    except Exception as e:
+        db.session.rollback()
+        logger.exception("Error updating company status:")
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+
 # Delete a company (protected by role)
 @companies_bp.route('/<int:company_id>', methods=['DELETE'])
 @role_required(['admin']) # Only admin can delete companies (already correct)
-def delete_company(company_id, current_user): # current_user is passed by role_required
+def delete_company(company_id, current_user):
     logger.info(f"\n--- Delete Company Request ---")
     logger.info(f"Delete request for company ID: {company_id} by user '{current_user.username}' (ID: {current_user.id}, Role: {current_user.role})")
 

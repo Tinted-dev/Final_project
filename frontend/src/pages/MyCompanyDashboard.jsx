@@ -17,7 +17,7 @@ const MyCompanyDashboard = () => {
     description: '',
     email: '',
     phone: '',
-    status: '', // Company owner might not edit status directly
+    // status: '', // Status is now read-only for company owner, not part of their editable form
     region_id: '',
     services: [],
   });
@@ -48,12 +48,13 @@ const MyCompanyDashboard = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setCompany(res.data);
+        // Initialize form state with current company data for editing
         setForm({
           name: res.data.name,
           description: res.data.description || '',
           email: res.data.email || '',
           phone: res.data.phone || '',
-          status: res.data.status || '',
+          // status: res.data.status || '', // Status is read-only
           region_id: res.data.region ? res.data.region.id : '',
           services: res.data.services ? res.data.services.map(s => s.id) : [],
         });
@@ -101,8 +102,9 @@ const MyCompanyDashboard = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     setError(null);
-    if (!accessToken || !user || user.role !== 'company_owner' || !company) {
-      setError('Unauthorized or company not loaded.');
+    // Only allow update if company status is 'approved'
+    if (!accessToken || !user || user.role !== 'company_owner' || !company || company.status !== 'approved') {
+      setError('Unauthorized or company not approved for editing.');
       return;
     }
 
@@ -136,10 +138,19 @@ const MyCompanyDashboard = () => {
   if (error) return <p className="text-center mt-8 text-red-600 font-semibold">{error}</p>;
   if (!company) return <p className="text-center mt-8 text-gray-600">No company profile found for this user.</p>;
 
+  const isApproved = company.status === 'approved';
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6 text-center">My Company Dashboard</h1>
       
+      {!isApproved && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
+          <p className="font-bold">Company Status: {company.status.toUpperCase()}</p>
+          <p>Your company profile is currently {company.status}. Please await administrator approval to enable full features.</p>
+        </div>
+      )}
+
       {editMode ? (
         // Render the Edit Form when in editMode
         <form onSubmit={handleUpdate} className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -154,6 +165,7 @@ const MyCompanyDashboard = () => {
               onChange={handleChange}
               required
               className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={!isApproved} // Disable if not approved
             />
           </div>
           <div className="mb-4">
@@ -165,6 +177,7 @@ const MyCompanyDashboard = () => {
               onChange={handleChange}
               rows="3"
               className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={!isApproved} // Disable if not approved
             />
           </div>
           <div className="mb-4">
@@ -176,6 +189,7 @@ const MyCompanyDashboard = () => {
               value={form.email}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={!isApproved} // Disable if not approved
             />
           </div>
           <div className="mb-4">
@@ -187,17 +201,18 @@ const MyCompanyDashboard = () => {
               value={form.phone}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={!isApproved} // Disable if not approved
             />
           </div>
-          {/* Status might not be editable by company owner, or shown as read-only */}
+          {/* Status is read-only for company owner */}
           <div className="mb-4">
             <label htmlFor="status" className="block mb-1 font-medium text-gray-700">Status</label>
             <input
               type="text"
               id="status"
               name="status"
-              value={form.status}
-              readOnly // Make status read-only for company owner
+              value={company.status}
+              readOnly
               className="w-full p-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
             />
           </div>
@@ -209,6 +224,7 @@ const MyCompanyDashboard = () => {
               value={form.region_id}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={!isApproved} // Disable if not approved
             >
               <option value="">Select a region</option>
               {regions.map(region => (
@@ -225,6 +241,7 @@ const MyCompanyDashboard = () => {
               value={form.services.map(String)}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2 h-32 focus:ring-blue-500 focus:border-blue-500"
+              disabled={!isApproved} // Disable if not approved
             >
               {allServices.map(service => (
                 <option key={service.id} value={service.id}>{service.name}</option>
@@ -237,7 +254,8 @@ const MyCompanyDashboard = () => {
           <div className="flex space-x-2 justify-end">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!isApproved} // Disable if not approved
             >
               Save Changes
             </button>
@@ -256,7 +274,7 @@ const MyCompanyDashboard = () => {
           <h2 className="text-2xl font-semibold mb-2 text-gray-800">{company.name}</h2>
           <p className="text-gray-700 mb-2"><strong>Email:</strong> {company.email || 'N/A'}</p>
           <p className="text-gray-700 mb-2"><strong>Phone:</strong> {company.phone || 'N/A'}</p>
-          <p className="text-gray-700 mb-2"><strong>Status:</strong> {company.status || 'N/A'}</p>
+          <p className="text-gray-700 mb-2"><strong>Status:</strong> <span className={`font-bold ${company.status === 'approved' ? 'text-green-600' : company.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'}`}>{company.status.toUpperCase()}</span></p>
           <p className="text-gray-700 mb-2"><strong>Region:</strong> {company.region ? company.region.name : 'N/A'}</p>
           <p className="text-gray-700 mb-4"><strong>Description:</strong> {company.description || 'No description available'}</p>
           
@@ -274,7 +292,8 @@ const MyCompanyDashboard = () => {
           <div className="mt-6 space-x-2">
             <button
               onClick={() => setEditMode(true)}
-              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
+              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!isApproved} // Disable edit button if not approved
             >
               Edit My Company Profile
             </button>

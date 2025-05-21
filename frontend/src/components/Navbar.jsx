@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-  const { user, logout, isAdmin } = useAuth(); // isAdmin is still used for admin-specific links
+  const { user, logout, isAdmin } = useAuth();
 
   return (
     <nav className="bg-gray-800 p-4 text-white">
@@ -16,12 +16,13 @@ export default function Navbar() {
           {/* Admin Links */}
           {isAdmin && (
             <>
+              <Link to="/admin-dashboard" className="hover:text-gray-300">Admin Dashboard</Link>
               <Link to="/admin/services" className="hover:text-gray-300">Manage Services</Link>
               <Link to="/admin/regions" className="hover:text-gray-300">Manage Regions</Link>
             </>
           )}
 
-          {/* Company Owner Link (remains) */}
+          {/* Company Owner Link */}
           {user && user.role === 'company_owner' && (
             <Link to="/my-company-dashboard" className="hover:text-gray-300">My Company</Link>
           )}
@@ -29,7 +30,7 @@ export default function Navbar() {
           {user ? (
             <>
               {/* My Profile Link (for any logged-in user) */}
-              <Link to="/my-profile" className="hover:text-gray-300">My Profile</Link> {/* <--- NEW LINK */}
+              <Link to="/my-profile" className="hover:text-gray-300">My Profile</Link>
               <span className="text-gray-300">Welcome, {user.username} ({user.role})</span>
               <button onClick={logout} className="hover:text-gray-300">Logout</button>
             </>

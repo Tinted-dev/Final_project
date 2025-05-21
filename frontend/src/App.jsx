@@ -13,11 +13,12 @@ import CreateCompany from './pages/CreateCompany';
 import EditCompany from './pages/EditCompany';
 import ServicesManagement from './pages/ServicesManagement';
 import RegionsManagement from './pages/RegionsManagement';
-import UserProfile from './pages/UserProfile'; // <--- NEW IMPORT
+import UserProfile from './pages/UserProfile';
+import AdminDashboard from './pages/AdminDashboard';
+import UsersManagement from './pages/UsersManagement'; // <--- NEW IMPORT
 import './index.css';
 
 // Placeholder components for other dashboards
-const AdminDashboard = () => <h2 className="text-3xl text-center mt-20">Admin Dashboard</h2>;
 const CollectorDashboard = () => <h2 className="text-3xl text-center mt-20">Collector Dashboard</h2>;
 const UserDashboard = () => <h2 className="text-3xl text-center mt-20">User Dashboard</h2>;
 
@@ -38,7 +39,7 @@ function App() {
               <Route path="/companies" element={<Companies />} />
               <Route path="/companies/:id" element={<CompanyDetails />} />
 
-              {/* Protected Routes for Dashboards */}
+              {/* Role-Based Dashboards (Protected) */}
               <Route
                 path="/admin-dashboard"
                 element={
@@ -72,9 +73,9 @@ function App() {
                 }
               />
               <Route
-                path="/my-profile" // <--- NEW PROTECTED ROUTE FOR USER PROFILE
+                path="/my-profile"
                 element={
-                  <ProtectedRoute allowedRoles={['admin', 'collector', 'user', 'company_owner']}> {/* Accessible by any logged-in user */}
+                  <ProtectedRoute allowedRoles={['admin', 'collector', 'user', 'company_owner']}>
                     <UserProfile />
                   </ProtectedRoute>
                 }
@@ -112,6 +113,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <RegionsManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users" // <--- NEW ROUTE FOR USERS MANAGEMENT
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <UsersManagement />
                   </ProtectedRoute>
                 }
               />

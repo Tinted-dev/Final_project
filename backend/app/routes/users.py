@@ -121,8 +121,8 @@ def update_my_profile():
 
 # Other user management endpoints (e.g., for admin to manage all users) would go here
 # For example:
-# @users_bp.route('/', methods=['GET'])
-# @role_required(['admin'])
-# def get_all_users(current_user): # Admin can get all users
-#     users = User.query.all()
-#     return jsonify([{'id': u.id, 'username': u.username, 'email': u.email, 'role': u.role} for u in users])
+@users_bp.route('/', methods=['GET'])
+@role_required(['admin'])
+def get_all_users(current_user): # Admin can get all users
+    users = User.query.all()
+    return jsonify([{'id': u.id, 'username': u.username, 'email': u.email, 'role': u.role} for u in users])
