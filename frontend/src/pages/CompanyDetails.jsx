@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 export default function CompanyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,7 +30,7 @@ export default function CompanyDetails() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`http://localhost:5000/api/companies/${id}`)
+    axios.get(`${API_BASE_URL}/companies/${id}`)
       .then(res => {
         setCompany(res.data);
         setForm({
@@ -49,13 +51,13 @@ export default function CompanyDetails() {
   }, [id]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/regions/')
+    axios.get('${API_BASE_URL}/regions/')
       .then(res => setRegions(res.data))
       .catch(err => console.error("Error fetching regions:", err));
   }, []);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/services/')
+    axios.get('${API_BASE_URL}/services/')
       .then(res => setAllServices(res.data))
       .catch(err => console.error("Error fetching services:", err));
   }, []);
@@ -89,9 +91,9 @@ export default function CompanyDetails() {
           services: form.services.map(Number)
       };
 
-      await axios.put(`http://localhost:5000/api/companies/${company.id}`, dataToSend, { headers });
+      await axios.put(`${API_BASE_URL}/${company.id}`, dataToSend, { headers });
       
-      axios.get(`http://localhost:5000/api/companies/${id}`)
+      axios.get(`${API_BASE_URL}/companies/${id}`)
         .then(res => setCompany(res.data))
         .catch(err => console.error("Error re-fetching company after update:", err))
         .finally(() => setEditMode(false));
@@ -118,7 +120,7 @@ export default function CompanyDetails() {
 
       const headers = { Authorization: `Bearer ${accessToken}` };
 
-      await axios.delete(`http://localhost:5000/api/companies/${company.id}`, { headers });
+      await axios.delete(`${API_BASE_URL}/companies/${company.id}`, { headers });
       alert('Company deleted successfully!');
       navigate('/companies');
     } catch (err) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const EditCompany = () => {
   const { id } = useParams();
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -17,8 +18,8 @@ const EditCompany = () => {
     const fetchData = async () => {
       try {
         const [regionRes, serviceRes] = await Promise.all([
-          fetch('http://localhost:5000/api/regions'),
-          fetch('http://localhost:5000/api/services'),
+          fetch('${API_BASE_URL}/regions'),
+          fetch('${API_BASE_URL}/services'),
         ]);
 
         if (!regionRes.ok || !serviceRes.ok) {
@@ -31,7 +32,7 @@ const EditCompany = () => {
         setRegions(regions);
         setServices(services);
 
-        const companyRes = await fetch(`http://localhost:5000/api/companies/${id}`, {
+        const companyRes = await fetch(`${API_BASE_URL}/companies/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

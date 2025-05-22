@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 const UserProfile = () => {
   const { user, accessToken, loading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
@@ -35,7 +37,7 @@ const UserProfile = () => {
       }
 
       try {
-        const res = await axios.get('http://localhost:5000/api/users/me', {
+        const res = await axios.get('${API_BASE_URL}/users/me', {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setFormData(prev => ({
@@ -92,7 +94,7 @@ const UserProfile = () => {
     }
 
     try {
-      const res = await axios.put('http://localhost:5000/api/users/me', updatePayload, {
+      const res = await axios.put('${API_BASE_URL}/users/me', updatePayload, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setSuccessMessage(res.data.message || 'Profile updated successfully!');

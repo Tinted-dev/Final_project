@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 const AdminDashboard = () => {
   const { accessToken, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ const AdminDashboard = () => {
       return;
     }
     try {
-      const res = await axios.get('http://localhost:5000/api/companies/', {
+      const res = await axios.get('${API_BASE_URL}/companies/', {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const filteredCompanies = res.data.filter(company => company.status === 'pending');
@@ -45,7 +47,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      await axios.put(`http://localhost:5000/api/companies/${companyId}/status`, { status: newStatus }, {
+      await axios.put(`${API_BASE_URL}/companies/${companyId}/status`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       alert(`Company status updated to ${newStatus}!`);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const ServicesManagement = () => {
   const { accessToken, isAdmin, loading: authLoading } = useAuth();
   const [services, setServices] = useState([]);
@@ -14,7 +15,7 @@ const ServicesManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get('http://localhost:5000/api/services/');
+      const res = await axios.get('${API_BASE_URL}/services/');
       setServices(res.data);
     } catch (err) {
       console.error("Error fetching services:", err);
@@ -50,10 +51,10 @@ const ServicesManagement = () => {
 
     try {
       if (editServiceId) {
-        await axios.put(`http://localhost:5000/api/services/${editServiceId}`, form, { headers });
+        await axios.put(`${API_BASE_URL}/services/${editServiceId}`, form, { headers });
         alert('Service updated successfully!');
       } else {
-        await axios.post('http://localhost:5000/api/services/', form, { headers });
+        await axios.post('${API_BASE_URL}/services/', form, { headers });
         alert('Service created successfully!');
       }
       setForm({ name: '', description: '' });
@@ -81,7 +82,7 @@ const ServicesManagement = () => {
     const headers = { Authorization: `Bearer ${accessToken}` };
 
     try {
-      await axios.delete(`http://localhost:5000/api/services/${serviceId}`, { headers });
+      await axios.delete(`${API_BASE_URL}/services/${serviceId}`, { headers });
       alert('Service deleted successfully!');
       fetchServices();
     } catch (err) {

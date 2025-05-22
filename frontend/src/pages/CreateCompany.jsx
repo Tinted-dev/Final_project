@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const CreateCompany = () => {
   const { accessToken } = useAuth();
   const navigate = useNavigate();
@@ -25,9 +26,9 @@ const CreateCompany = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const regionRes = await axios.get('http://localhost:5000/api/regions/');
+        const regionRes = await axios.get('${API_BASE_URL}/regions/');
         setRegions(regionRes.data);
-        const serviceRes = await axios.get('http://localhost:5000/api/services/');
+        const serviceRes = await axios.get('${API_BASE_URL}/services/');
         setAllServices(serviceRes.data);
       } catch (err) {
         console.error("Error fetching initial data for CreateCompany:", err);
@@ -75,7 +76,7 @@ const CreateCompany = () => {
     };
 
     try {
-      await axios.post('http://localhost:5000/api/companies/', payload, {
+      await axios.post('${API_BASE_URL}/companies/', payload, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,

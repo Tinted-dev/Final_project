@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const RegionsManagement = () => {
   const { accessToken, isAdmin, loading: authLoading } = useAuth();
   const [regions, setRegions] = useState([]);
@@ -14,7 +15,7 @@ const RegionsManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get('http://localhost:5000/api/regions/');
+      const res = await axios.get('${API_BASE_URL}/regions/');
       setRegions(res.data);
     } catch (err) {
       console.error("Error fetching regions:", err);
@@ -50,10 +51,10 @@ const RegionsManagement = () => {
 
     try {
       if (editRegionId) {
-        await axios.put(`http://localhost:5000/api/regions/${editRegionId}`, form, { headers });
+        await axios.put(`${API_BASE_URL}/regions/${editRegionId}`, form, { headers });
         alert('Region updated successfully!');
       } else {
-        await axios.post('http://localhost:5000/api/regions/', form, { headers });
+        await axios.post('${API_BASE_URL}/regions/', form, { headers });
         alert('Region created successfully!');
       }
       setForm({ name: '', description: '' });
@@ -81,7 +82,7 @@ const RegionsManagement = () => {
     const headers = { Authorization: `Bearer ${accessToken}` };
 
     try {
-      await axios.delete(`http://localhost:5000/api/regions/${regionId}`, { headers });
+      await axios.delete(`${API_BASE_URL}/${regionId}`, { headers });
       alert('Region deleted successfully!');
       fetchRegions();
     } catch (err) {

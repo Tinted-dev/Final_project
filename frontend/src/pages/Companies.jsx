@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 export default function Companies() {
   const [allCompanies, setAllCompanies] = useState([]); // Stores all fetched companies
   const [filteredCompanies, setFilteredCompanies] = useState([]); // Stores companies after filtering
@@ -16,12 +17,12 @@ export default function Companies() {
       setError('');
       try {
         // Fetch all companies
-        const companiesRes = await axios.get('http://localhost:5000/api/companies/');
+        const companiesRes = await axios.get('${API_BASE_URL}/companies/');
         setAllCompanies(companiesRes.data);
         setFilteredCompanies(companiesRes.data); // Initially, display all companies
 
         // Fetch regions for the filter dropdown
-        const regionsRes = await axios.get('http://localhost:5000/api/regions/');
+        const regionsRes = await axios.get('${API_BASE_URL}/regions/');
         setRegions(regionsRes.data);
       } catch (err) {
         console.error("Error fetching initial data:", err);
