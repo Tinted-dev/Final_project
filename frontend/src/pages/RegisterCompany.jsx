@@ -42,9 +42,9 @@ export default function RegisterCompany() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const regionRes = await axios.get('${API_BASE_URL}/regions/');
+        const regionRes = await axios.get(`${API_BASE_URL}/regions/`);
         setRegions(regionRes.data);
-        const serviceRes = await axios.get('${API_BASE_URL}/services/');
+        const serviceRes = await axios.get(`${API_BASE_URL}/services/`);
         setAllServices(serviceRes.data);
       } catch (err) {
         console.error("Error fetching regions/services:", err);
@@ -84,7 +84,7 @@ export default function RegisterCompany() {
     }
 
     try {
-      const response = await axios.post('${API_BASE_URL}/auth/register-company', {
+      const response = await axios.post(`${API_BASE_URL}/auth/register-company`, {
         username,
         password,
         user_email,

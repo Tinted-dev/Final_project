@@ -37,7 +37,7 @@ const UserProfile = () => {
       }
 
       try {
-        const res = await axios.get('${API_BASE_URL}/users/me', {
+        const res = await axios.get(`${API_BASE_URL}/users/me`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setFormData(prev => ({
@@ -94,7 +94,7 @@ const UserProfile = () => {
     }
 
     try {
-      const res = await axios.put('${API_BASE_URL}/users/me', updatePayload, {
+      const res = await axios.put(`${API_BASE_URL}/users/me`, updatePayload, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setSuccessMessage(res.data.message || 'Profile updated successfully!');

@@ -15,7 +15,7 @@ const RegionsManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get('${API_BASE_URL}/regions/');
+      const res = await axios.get(`${API_BASE_URL}/regions/`);
       setRegions(res.data);
     } catch (err) {
       console.error("Error fetching regions:", err);
@@ -54,7 +54,7 @@ const RegionsManagement = () => {
         await axios.put(`${API_BASE_URL}/regions/${editRegionId}`, form, { headers });
         alert('Region updated successfully!');
       } else {
-        await axios.post('${API_BASE_URL}/regions/', form, { headers });
+        await axios.post(`${API_BASE_URL}/regions/`, form, { headers });
         alert('Region created successfully!');
       }
       setForm({ name: '', description: '' });

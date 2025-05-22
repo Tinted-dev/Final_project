@@ -20,7 +20,7 @@ const AdminDashboard = () => {
       return;
     }
     try {
-      const res = await axios.get('${API_BASE_URL}/companies/', {
+      const res = await axios.get(`${API_BASE_URL}/companies/`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const filteredCompanies = res.data.filter(company => company.status === 'pending');

@@ -15,7 +15,7 @@ const ServicesManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get('${API_BASE_URL}/services/');
+      const res = await axios.get(`${API_BASE_URL}/services/`);
       setServices(res.data);
     } catch (err) {
       console.error("Error fetching services:", err);
@@ -54,7 +54,7 @@ const ServicesManagement = () => {
         await axios.put(`${API_BASE_URL}/services/${editServiceId}`, form, { headers });
         alert('Service updated successfully!');
       } else {
-        await axios.post('${API_BASE_URL}/services/', form, { headers });
+        await axios.post(`${API_BASE_URL}/services/`, form, { headers });
         alert('Service created successfully!');
       }
       setForm({ name: '', description: '' });

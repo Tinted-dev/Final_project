@@ -17,12 +17,12 @@ export default function Companies() {
       setError('');
       try {
         // Fetch all companies
-        const companiesRes = await axios.get('${API_BASE_URL}/companies/');
+        const companiesRes = await axios.get(`${API_BASE_URL}/companies/`);
         setAllCompanies(companiesRes.data);
         setFilteredCompanies(companiesRes.data); // Initially, display all companies
 
         // Fetch regions for the filter dropdown
-        const regionsRes = await axios.get('${API_BASE_URL}/regions/');
+        const regionsRes = await axios.get(`${API_BASE_URL}/regions/`);
         setRegions(regionsRes.data);
       } catch (err) {
         console.error("Error fetching initial data:", err);
@@ -99,7 +99,7 @@ export default function Companies() {
               </p>
               <div className="mt-auto pt-4"> {/* Push button to bottom */}
                 <Link
-                  to={`/companies/${company.id}`}
+                  to={`${API_BASE_URL}/companies/${company.id}`}
                   className="btn-primary inline-block text-center w-full"
                 >
                   View Details

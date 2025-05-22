@@ -41,7 +41,7 @@ const MyCompanyDashboard = () => {
       }
 
       try {
-        const res = await axios.get('${API_BASE_URL}/companies/my-company', {
+        const res = await axios.get(`${API_BASE_URL}/companies/my-company`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         setCompany(res.data);
@@ -69,9 +69,9 @@ const MyCompanyDashboard = () => {
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
-        const regionRes = await axios.get('${API_BASE_URL}/regions/');
+        const regionRes = await axios.get(`${API_BASE_URL}/regions/`);
         setRegions(regionRes.data);
-        const serviceRes = await axios.get('${API_BASE_URL}/services/');
+        const serviceRes = await axios.get(`${API_BASE_URL}/services/`);
         setAllServices(serviceRes.data);
       } catch (err) {
         console.error("Error fetching dropdown data:", err);
@@ -110,7 +110,7 @@ const MyCompanyDashboard = () => {
     try {
       await axios.put(`${API_BASE_URL}/companies/${company.id}`, dataToSend, { headers });
       
-      const res = await axios.get('${API_BASE_URL}/companies/my-company', {
+      const res = await axios.get(`${API_BASE_URL}/companies/my-company`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setCompany(res.data);

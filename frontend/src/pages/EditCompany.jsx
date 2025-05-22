@@ -18,8 +18,8 @@ const EditCompany = () => {
     const fetchData = async () => {
       try {
         const [regionRes, serviceRes] = await Promise.all([
-          fetch('${API_BASE_URL}/regions'),
-          fetch('${API_BASE_URL}/services'),
+          fetch(`${API_BASE_URL}/regions`),
+          fetch(`${API_BASE_URL}/services`),
         ]);
 
         if (!regionRes.ok || !serviceRes.ok) {

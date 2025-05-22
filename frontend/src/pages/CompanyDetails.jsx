@@ -51,13 +51,13 @@ export default function CompanyDetails() {
   }, [id]);
 
   useEffect(() => {
-    axios.get('${API_BASE_URL}/regions/')
+    axios.get(`${API_BASE_URL}/regions/`)
       .then(res => setRegions(res.data))
       .catch(err => console.error("Error fetching regions:", err));
   }, []);
 
   useEffect(() => {
-    axios.get('${API_BASE_URL}/services/')
+    axios.get(`${API_BASE_URL}/services/`)
       .then(res => setAllServices(res.data))
       .catch(err => console.error("Error fetching services:", err));
   }, []);
@@ -220,7 +220,7 @@ export default function CompanyDetails() {
                 <option key={service.id} value={service.id}>{service.name}</option>
               ))}
             </select>
-            <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple services.</p>
+            <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Shift to select multiple services.</p>
           </div>
 
           {error && <p className="text-red-600 mb-4 text-center">{error}</p>}

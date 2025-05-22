@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
     if (storedAccessToken) {
       setAccessToken(storedAccessToken);
       
-      axios.get('${API_BASE_URL}/users/me', { // <--- CHANGED: New endpoint for /me
+      axios.get(`${API_BASE_URL}/users/me`, { // <--- CHANGED: New endpoint for /me
         headers: { Authorization: `Bearer ${storedAccessToken}` }
       })
       .then(res => {
@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     console.log("AuthContext: Attempting login for username:", username);
     try {
-      const response = await axios.post('${API_BASE_URL}/auth/token', { username, password });
+      const response = await axios.post(`${API_BASE_URL}/auth/token`, { username, password });
       const { access_token, user: loggedInUser } = response.data; 
 
       localStorage.setItem('access_token', access_token);
@@ -60,7 +60,7 @@ export function AuthProvider({ children }) {
   const register = async (username, email, password) => {
     console.log("AuthContext: Attempting standard user registration for username:", username);
     try {
-      const res = await axios.post('${API_BASE_URL}/auth/register', { username, email, password });
+      const res = await axios.post(`${API_BASE_URL}/auth/register`, { username, email, password });
       const { access_token, user: registeredUser } = res.data;
 
       localStorage.setItem('access_token', access_token);
