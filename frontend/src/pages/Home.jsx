@@ -5,7 +5,7 @@ const images = [
   "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1920&q=80", // Green environment
   "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1920&q=80", // City with nature, futuristic feel
   "https://images.unsplash.com/photo-1484910292437-025e5d13ce87?auto=format&fit=crop&w=1920&q=80", // Sustainability focus
-  "https://images.unsplash.com/photo-1517772590747-d576361a4947?auto=format&fit=crop&w=1920&q=80", // Modern waste facility
+  // "https://images.unsplash.com/photo-1517772590747-d576361a4947?auto=format&fit=crop&w=1920&q=80", // Modern waste facility
 ];
 
 export default function Home() {
@@ -215,7 +215,7 @@ export default function Home() {
             </a>
           </p>
           <p className="text-xl">📍 Location: Nairobi, Kenya</p>
-          <p className="text-xl">📞 Phone: +254 712 345 678</p>
+          <p className="text-xl">📞 Phone: +254 729 698 288</p>
           <div className="flex justify-center space-x-6 mt-8 text-3xl">
             <a href="#" className="text-gray-600 hover:text-blue-600 transition duration-200">
               <i className="fab fa-facebook-f"></i> {/* Facebook Icon */}
