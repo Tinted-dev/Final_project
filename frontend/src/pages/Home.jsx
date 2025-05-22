@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 // Images for the hero section slideshow
 const images = [
@@ -47,12 +48,12 @@ export default function Home() {
           <p className="text-lg md:text-xl lg:text-2xl mb-10 max-w-3xl animate-fade-in drop-shadow-lg">
             Connecting innovative waste management solutions with communities for a sustainable and efficient future.
           </p>
-          <a
-            href="/companies"
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition duration-300 ease-in-out text-lg tracking-wide uppercase"
-          >
-            Explore Companies
-          </a>
+          <Link
+              to="/companies"
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition duration-300 ease-in-out text-lg tracking-wide uppercase"
+            >
+              Explore Companies
+            </Link>
         </div>
       </div>
 
@@ -188,12 +189,12 @@ export default function Home() {
         <p className="text-xl mb-10 max-w-3xl mx-auto opacity-90">
           Are you a garbage collection company committed to a cleaner environment? Join WasteTrack's growing network and connect with thousands of potential clients.
         </p>
-        <a
-          href="/register-company"
-          className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-10 rounded-full shadow-xl transform hover:scale-105 transition duration-300 ease-in-out text-xl tracking-wide uppercase"
-        >
-          Register Your Company Today
-        </a>
+        <Link
+              to="/register-company"
+              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-10 rounded-full shadow-xl transform hover:scale-105 transition duration-300 ease-in-out text-xl tracking-wide uppercase"
+            >
+              Register Your Company Today
+            </Link>
       </section>
 
       {/* Contact Section */}
