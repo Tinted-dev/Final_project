@@ -1,5 +1,10 @@
 from flask import Blueprint, jsonify
-from ...seed import seed_database  # <-- adjust import to match your file name
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+
+from seed import seed_database  # ✅ Correct absolute import after path fix
+
 
 seed_bp = Blueprint('seed', __name__)
 
