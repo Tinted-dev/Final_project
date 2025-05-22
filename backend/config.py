@@ -5,12 +5,15 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'supersecretkey')
 
-    # --- CHANGE THIS LINE ---
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
+    # Fix "postgres://" to "postgresql://"
+    raw_uri = os.environ.get(
         'DATABASE_URL',
-        'postgresql://garbage_app_db_user:4v9V892DME2PdFIy7xPvYVXxtOzjFcfi@dpg-d0nc4uumcj7s73dr2vr0-a/garbage_app_db'
+        'postgresql://app_db_o7l5_user:PjRZAEH8x12CJn8iqzCEhv0OdybMR00H@dpg-d0ngf3euk2gs73bv11vg-a/app_db_o7l5'
     )
-    # --- END CHANGE ---
+    if raw_uri.startswith("postgres://"):
+        raw_uri = raw_uri.replace("postgres://", "postgresql://", 1)
+
+    SQLALCHEMY_DATABASE_URI = raw_uri
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
