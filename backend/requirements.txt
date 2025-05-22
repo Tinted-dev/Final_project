@@ -5,3 +5,4 @@ Flask-Migrate==3.x.x
 Flask-CORS==3.x.x
 psycopg2-binary==2.x.x # For PostgreSQL database
 gunicorn==21.x.x # Production WSGI server
+python-dotenv==1.x.x
