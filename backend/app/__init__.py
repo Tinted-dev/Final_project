@@ -15,7 +15,7 @@ from app.routes.companies import companies_bp
 from app.routes.services import services_bp
 from app.routes.regions import regions_bp
 from app.routes.users import users_bp # <--- NEW IMPORT
-from app.routes.seed import seed_bp
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -40,7 +40,7 @@ def create_app():
     app.register_blueprint(services_bp)
     app.register_blueprint(regions_bp)
     app.register_blueprint(users_bp) # <--- NEW REGISTRATION
-    app.register_blueprint(seed_bp)
+   
     print(f"Blueprints registered: {app.blueprints.keys()}")
 
     return app
