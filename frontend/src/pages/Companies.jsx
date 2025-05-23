@@ -3,11 +3,12 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 export default function Companies() {
-  const [allCompanies, setAllCompanies] = useState([]); // Stores all fetched companies
-  const [filteredCompanies, setFilteredCompanies] = useState([]); // Stores companies after filtering
-  const [regions, setRegions] = useState([]); // Stores available regions for the filter
-  const [selectedRegion, setSelectedRegion] = useState(''); // State for the selected region filter
+  const [allCompanies, setAllCompanies] = useState([]);
+  const [filteredCompanies, setFilteredCompanies] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -16,12 +17,10 @@ export default function Companies() {
       setLoading(true);
       setError('');
       try {
-        // Fetch all companies
         const companiesRes = await axios.get(`${API_BASE_URL}/companies/`);
         setAllCompanies(companiesRes.data);
-        setFilteredCompanies(companiesRes.data); // Initially, display all companies
+        setFilteredCompanies(companiesRes.data);
 
-        // Fetch regions for the filter dropdown
         const regionsRes = await axios.get(`${API_BASE_URL}/regions/`);
         setRegions(regionsRes.data);
       } catch (err) {
@@ -34,10 +33,9 @@ export default function Companies() {
     fetchInitialData();
   }, []);
 
-  // Effect to apply filter whenever selectedRegion or allCompanies changes
   useEffect(() => {
     if (selectedRegion === '' || selectedRegion === 'all') {
-      setFilteredCompanies(allCompanies); // Show all companies if no region selected
+      setFilteredCompanies(allCompanies);
     } else {
       const companiesInRegion = allCompanies.filter(company =>
         company.region && company.region.id === Number(selectedRegion)
@@ -56,8 +54,7 @@ export default function Companies() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Our Partner Companies</h1>
-      
-      {/* Region Filter Dropdown */}
+
       <div className="mb-8 max-w-xs mx-auto">
         <label htmlFor="region-filter" className="block text-sm font-medium text-gray-700 mb-2">Filter by Region:</label>
         <select
@@ -97,9 +94,9 @@ export default function Companies() {
                   {company.status.toUpperCase()}
                 </span>
               </p>
-              <div className="mt-auto pt-4"> {/* Push button to bottom */}
+              <div className="mt-auto pt-4">
                 <Link
-                  to={`${API_BASE_URL}/companies/${company.id}`}
+                  to={`/companies/${company.id}`}
                   className="btn-primary inline-block text-center w-full"
                 >
                   View Details
